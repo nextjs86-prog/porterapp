@@ -10,7 +10,9 @@
     "splash": {
       "backgroundColor": "#1E3A8A"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.quickhaul.driver"
@@ -29,7 +31,8 @@
     },
     "plugins": [
       "expo-location",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-asset"
     ]
   }
 }

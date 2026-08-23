@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "QuickHaul",
-    "slug": "quickhaul-customer",
+    "slug": "shara",
     "version": "1.0.0",
     "sdkVersion": "52.0.0",
     "orientation": "portrait",
@@ -10,7 +10,9 @@
     "splash": {
       "backgroundColor": "#1E3A8A"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.quickhaul.customer"
@@ -21,15 +23,23 @@
       },
       "package": "com.quickhaul.customer",
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
       "expo-location",
-      "expo-image-picker"
-    ]
+      "expo-image-picker",
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f60581b5-dfe1-4ea4-a1c5-346071c5bd06"
+      }
+    },
+    "owner": "sharaexpos-team"
   }
 }
