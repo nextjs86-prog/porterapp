@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import useAdminStore from '../store/useAdminStore';
+
+const MOBILE_QUERY = '(max-width: 768px)';
 
 const NAV = [
   { to: '/',             icon: '📊', label: 'Dashboard'     },
@@ -15,9 +17,16 @@ const NAV = [
 ];
 
 export default function Layout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => window.matchMedia(MOBILE_QUERY).matches);
   const logout    = useAdminStore(s => s.logout);
   const navigate  = useNavigate();
+
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const onChange = (e) => setCollapsed(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 

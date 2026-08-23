@@ -101,11 +101,11 @@ export default function AnalyticsPage() {
 const s = {
   page:        { display: 'flex', flexDirection: 'column', gap: 20 },
   title:       { fontSize: 22, fontWeight: 700, color: '#0F172A' },
-  filterRow:   { display: 'flex', gap: 16 },
+  filterRow:   { display: 'flex', flexWrap: 'wrap', gap: 16 },
   dateField:   { display: 'flex', flexDirection: 'column', gap: 4 },
   label:       { fontSize: 12, fontWeight: 600, color: '#64748B' },
   input:       { padding: '10px 12px', borderRadius: 8, border: '1.5px solid #E2E8F0', fontSize: 14 },
-  summaryRow:  { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 },
+  summaryRow:  { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 },
   summaryCard: { backgroundColor: '#fff', borderRadius: 14, padding: 24, textAlign: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' },
   summaryVal:  { fontSize: 28, fontWeight: 700, color: '#1E3A8A' },
   summaryLabel:{ fontSize: 13, color: '#64748B', marginTop: 4 },

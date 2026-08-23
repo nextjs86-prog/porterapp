@@ -107,7 +107,7 @@ const s = {
   statIcon:   { width: 48, height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 },
   statVal:    { fontSize: 26, fontWeight: 700, color: '#0F172A' },
   statLabel:  { fontSize: 12, color: '#64748B', marginTop: 2 },
-  chartsRow:  { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
+  chartsRow:  { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 },
   chartCard:  { backgroundColor: '#fff', borderRadius: 14, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' },
   chartTitle: { fontSize: 15, fontWeight: 700, color: '#0F172A', marginBottom: 16 },
   tableCard:  { backgroundColor: '#fff', borderRadius: 14, padding: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.07)' },

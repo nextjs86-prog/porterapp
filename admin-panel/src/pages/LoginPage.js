@@ -47,8 +47,8 @@ export default function LoginPage() {
 }
 
 const s = {
-  page:  { minHeight: '100vh', backgroundColor: '#1E3A8A', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  card:  { backgroundColor: '#fff', borderRadius: 20, padding: 40, width: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
+  page:  { minHeight: '100vh', backgroundColor: '#1E3A8A', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  card:  { backgroundColor: '#fff', borderRadius: 20, padding: 40, width: '100%', maxWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
   logo:  { fontSize: 52, textAlign: 'center', marginBottom: 12 },
   title: { fontSize: 26, fontWeight: 700, color: '#0F172A', textAlign: 'center' },
   sub:   { fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 28 },
