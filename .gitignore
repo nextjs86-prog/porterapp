@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+build/
+dist/
+customer-app/android/app/build/
+customer-app/ios/build/
+
+# React Native / Metro
+.expo/
+.expo-shared/
+*.jsbundle
+customer-app/android/.gradle/
+customer-app/android/local.properties
+customer-app/ios/Pods/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
