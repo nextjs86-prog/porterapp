@@ -9,7 +9,7 @@ import io from 'socket.io-client';
 import api from '../utils/api';
 import useOrderStore from '../store/useOrderStore';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'https://porterapp-7y12.onrender.com';
 
 const STATUS_STEPS = [
   { key: 'accepted',   label: 'Driver Assigned' },

@@ -4,7 +4,7 @@ import { COLORS, SIZES } from '../utils/theme';
 import io from 'socket.io-client';
 import useAuthStore from '../store/useAuthStore';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'https://porterapp-7y12.onrender.com';
 
 const SearchDriverScreen = ({ navigation, route }) => {
   const { orderId } = route.params;

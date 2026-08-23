@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Linking, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Geolocation from '@react-native-community/geolocation';
+import Icon from '@expo/vector-icons/MaterialCommunityIcons';
 import { COLORS, SIZES } from '../utils/theme';
 import useDriverStore from '../store/useDriverStore';
 import api from '../utils/api';

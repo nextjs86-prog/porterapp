@@ -3,8 +3,8 @@ import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, Alert, SafeAreaView,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { launchImageLibrary } from 'react-native-image-picker';
+import Icon from '@expo/vector-icons/MaterialCommunityIcons';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SIZES } from '../utils/theme';
 import api from '../utils/api';
 
@@ -33,8 +33,8 @@ const RegisterScreen = ({ navigation, route }) => {
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
   const pickDoc = async (docKey) => {
-    const res = await launchImageLibrary({ mediaType: 'mixed', quality: 0.8 });
-    if (!res.didCancel && res.assets?.[0]) {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.All, quality: 0.8 });
+    if (!res.canceled && res.assets?.[0]) {
       setDocs(d => ({ ...d, [docKey]: res.assets[0] }));
     }
   };
@@ -48,7 +48,7 @@ const RegisterScreen = ({ navigation, route }) => {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       Object.entries(docs).forEach(([k, v]) => {
-        if (v) fd.append(k, { uri: v.uri, type: v.type, name: v.fileName });
+        if (v) fd.append(k, { uri: v.uri, type: v.mimeType || 'image/jpeg', name: v.fileName || `${k}.jpg` });
       });
       await api.post('/driver/register', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },

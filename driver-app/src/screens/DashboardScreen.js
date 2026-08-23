@@ -4,13 +4,13 @@ import {
   SafeAreaView, ScrollView, Alert,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Geolocation from '@react-native-community/geolocation';
+import Icon from '@expo/vector-icons/MaterialCommunityIcons';
+import * as Location from 'expo-location';
 import io from 'socket.io-client';
 import { COLORS, SIZES } from '../utils/theme';
 import useDriverStore from '../store/useDriverStore';
 
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'https://porterapp-7y12.onrender.com';
 
 const DashboardScreen = ({ navigation }) => {
   const { driver, isOnline, toggleOnline, updateLocation, fetchEarnings, earnings } = useDriverStore();
@@ -33,19 +33,21 @@ const DashboardScreen = ({ navigation }) => {
     });
 
     // Location tracking
-    locTimer.current = setInterval(() => {
-      Geolocation.getCurrentPosition(
-        ({ coords }) => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+
+      locTimer.current = setInterval(async () => {
+        try {
+          const { coords } = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
           setLocation({ latitude: coords.latitude, longitude: coords.longitude });
           if (isOnline) {
             updateLocation(coords.latitude, coords.longitude);
             socket.emit('driver:location', { driverId: driver?._id, lat: coords.latitude, lng: coords.longitude });
           }
-        },
-        err => console.warn(err),
-        { enableHighAccuracy: true }
-      );
-    }, 5000);
+        } catch (err) { console.warn(err); }
+      }, 5000);
+    })();
 
     return () => {
       socket.disconnect();
