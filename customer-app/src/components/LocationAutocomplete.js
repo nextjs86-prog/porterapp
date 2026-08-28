@@ -3,7 +3,7 @@ import { View, TextInput, TouchableOpacity, Text, StyleSheet, ActivityIndicator 
 import axios from 'axios';
 import { COLORS, SIZES } from '../utils/theme';
 
-export const LOCATIONIQ_KEY = 'YOUR_LOCATIONIQ_API_KEY';
+export const LOCATIONIQ_KEY = 'pk.0797f33a04259b86da95e1f770201fd7';
 
 export default function LocationAutocomplete({ placeholder, onSelect, value }) {
   const [query, setQuery] = useState('');
