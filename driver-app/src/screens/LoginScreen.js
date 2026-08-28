@@ -12,7 +12,8 @@ const LoginScreen = ({ navigation }) => {
     if (phone.length !== 10) return Alert.alert('Error', 'Enter valid 10-digit number');
     setLoading(true);
     try {
-      await sendOtp(phone);
+      const res = await sendOtp(phone);
+      if (res?.otp) Alert.alert('Test OTP', `MSG91 is not configured yet, so no real SMS was sent.\n\nYour test OTP is: ${res.otp}`);
       navigation.navigate('OTP', { phone });
     } catch (err) {
       const msg = err.response?.data?.message || '';
