@@ -1,29 +1,43 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { COLORS, SIZES } from '../utils/theme';
 import io from 'socket.io-client';
+import api from '../utils/api';
 import useAuthStore from '../store/useAuthStore';
+import useOrderStore from '../store/useOrderStore';
 
 const SOCKET_URL = 'https://porterapp-7y12.onrender.com';
+
+const VEHICLE_EMOJI = { bike: '🏍️', mini_truck: '🚚', tempo: '🚛', large_truck: '🚛' };
 
 const SearchDriverScreen = ({ navigation, route }) => {
   const { orderId } = route.params;
   const user     = useAuthStore(s => s.user);
-  const [status, setStatus] = useState('Searching for nearby drivers...');
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pickup   = useOrderStore(s => s.pickup);
+  const vehicleType = useOrderStore(s => s.selectedVehicle);
+
+  const [nearbyDrivers, setNearbyDrivers] = useState([]);
   const socketRef = useRef(null);
   const timerRef  = useRef(null);
+  const pollRef   = useRef(null);
+
+  const fetchNearbyDrivers = async () => {
+    if (!pickup) return;
+    try {
+      const res = await api.get('/order/nearby-drivers', {
+        params: { lat: pickup.lat, lng: pickup.lng, vehicleType },
+      });
+      setNearbyDrivers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
-    // Pulse animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.3, duration: 800, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1,   duration: 800, useNativeDriver: true }),
-      ])
-    ).start();
+    fetchNearbyDrivers();
+    pollRef.current = setInterval(fetchNearbyDrivers, 6000);
 
-    // Socket connection
     const socket = io(SOCKET_URL);
     socketRef.current = socket;
     socket.emit('customer:join', user?._id);
@@ -35,7 +49,6 @@ const SearchDriverScreen = ({ navigation, route }) => {
       }
     });
 
-    // 3 min timeout
     timerRef.current = setTimeout(() => {
       Alert.alert('No Driver Found', 'No drivers available nearby. Please try again.', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -45,32 +58,50 @@ const SearchDriverScreen = ({ navigation, route }) => {
     return () => {
       socket.disconnect();
       clearTimeout(timerRef.current);
+      clearInterval(pollRef.current);
     };
   }, []);
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.animContainer}>
-          {[1.6, 1.3, 1].map((scale, i) => (
-            <Animated.View
-              key={i}
-              style={[styles.ring, { transform: [{ scale: Animated.multiply(pulseAnim, scale) }], opacity: Animated.divide(1, scale) }]}
-            />
-          ))}
-          <View style={styles.centerDot}>
-            <Text style={{ fontSize: 36 }}>🚚</Text>
-          </View>
-        </View>
+      <MapView
+        provider={PROVIDER_GOOGLE}
+        style={styles.map}
+        initialRegion={{
+          latitude:       pickup?.lat  || 12.9716,
+          longitude:      pickup?.lng  || 77.5946,
+          latitudeDelta:  0.05,
+          longitudeDelta: 0.05,
+        }}
+      >
+        {pickup && (
+          <Marker coordinate={{ latitude: pickup.lat, longitude: pickup.lng }} title="Pickup">
+            <View style={styles.pickupMarker} />
+          </Marker>
+        )}
+        {nearbyDrivers.map(d => (
+          <Marker key={d._id} coordinate={d.location} title={d.name}>
+            <View style={styles.driverMarker}>
+              <Text style={{ fontSize: 22 }}>{VEHICLE_EMOJI[d.vehicleType] || '🚚'}</Text>
+            </View>
+          </Marker>
+        ))}
+      </MapView>
 
-        <Text style={styles.title}>{status}</Text>
-        <Text style={styles.sub}>Please wait while we connect you with a nearby driver</Text>
+      <View style={styles.topCard}>
+        <Text style={styles.title}>Searching for nearby drivers...</Text>
+        <Text style={styles.sub}>
+          {nearbyDrivers.length > 0
+            ? `${nearbyDrivers.length} driver${nearbyDrivers.length > 1 ? 's' : ''} nearby`
+            : 'Looking for available drivers'}
+        </Text>
+      </View>
 
-        <View style={styles.infoCard}>
+      <View style={styles.bottomCard}>
+        <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Order ID</Text>
           <Text style={styles.infoVal}>#{orderId?.slice(-8)?.toUpperCase()}</Text>
         </View>
-
         <TouchableOpacity
           style={styles.cancelBtn}
           onPress={() => {
@@ -88,19 +119,19 @@ const SearchDriverScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: COLORS.bgLight, justifyContent: 'center', alignItems: 'center' },
-  content:      { alignItems: 'center', padding: 32 },
-  animContainer:{ width: 200, height: 200, justifyContent: 'center', alignItems: 'center', marginBottom: 40 },
-  ring:         { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: `${COLORS.primary}20`, borderWidth: 1, borderColor: `${COLORS.primary}40` },
-  centerDot:    { width: 80, height: 80, borderRadius: 40, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center', elevation: 8 },
-  title:        { fontSize: SIZES.xl, fontWeight: '700', color: COLORS.textPrimary, textAlign: 'center', marginBottom: 12 },
-  sub:          { fontSize: SIZES.sm, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 20 },
-  infoCard:     { backgroundColor: COLORS.white, padding: 16, borderRadius: SIZES.radius, marginTop: 32, width: '100%', alignItems: 'center', elevation: 2 },
-  infoLabel:    { fontSize: SIZES.xs, color: COLORS.textSecondary, marginBottom: 4 },
-  infoVal:      { fontSize: SIZES.base, fontWeight: '700', color: COLORS.primary },
-  cancelBtn:    { marginTop: 32, padding: 14 },
-  cancelText:   { color: COLORS.error, fontSize: SIZES.base, fontWeight: '600' },
+  container:     { flex: 1 },
+  map:           { flex: 1 },
+  pickupMarker:  { width: 18, height: 18, borderRadius: 9, backgroundColor: COLORS.success, borderWidth: 3, borderColor: COLORS.white, elevation: 4 },
+  driverMarker:  { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.white, justifyContent: 'center', alignItems: 'center', elevation: 4, borderWidth: 1, borderColor: COLORS.grayLight },
+  topCard:       { position: 'absolute', top: 48, left: 16, right: 16, backgroundColor: COLORS.white, borderRadius: SIZES.radiusLg, padding: 16, elevation: 6, alignItems: 'center' },
+  title:         { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, textAlign: 'center' },
+  sub:           { fontSize: SIZES.sm, color: COLORS.textSecondary, marginTop: 4, textAlign: 'center' },
+  bottomCard:    { backgroundColor: COLORS.white, padding: 20, paddingBottom: 32, elevation: 8, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  infoRow:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  infoLabel:     { fontSize: SIZES.xs, color: COLORS.textSecondary },
+  infoVal:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.primary },
+  cancelBtn:     { alignItems: 'center', padding: 4 },
+  cancelText:    { color: COLORS.error, fontSize: SIZES.base, fontWeight: '600' },
 });
 
 export default SearchDriverScreen;
-

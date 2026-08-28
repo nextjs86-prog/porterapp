@@ -120,6 +120,9 @@ const BookingScreen = ({ navigation }) => {
           <View style={styles.fareCard}>
             <Text style={styles.fareTitle}>Fare Estimate</Text>
             <View style={styles.fareRow}><Text style={styles.fareLabel}>Distance</Text><Text style={styles.fareVal}>{fareEstimate.distanceKm} km</Text></View>
+            {fareEstimate.durationMins != null && (
+              <View style={styles.fareRow}><Text style={styles.fareLabel}>Estimated Time</Text><Text style={styles.fareVal}>{fareEstimate.durationMins} min</Text></View>
+            )}
             <View style={styles.fareRow}><Text style={styles.fareLabel}>Base Fare</Text><Text style={styles.fareVal}>₹{fareEstimate.baseFare}</Text></View>
             <View style={styles.fareRow}><Text style={styles.fareLabel}>Distance Fare</Text><Text style={styles.fareVal}>₹{fareEstimate.distanceFare?.toFixed(0)}</Text></View>
             <View style={[styles.fareRow, styles.totalRow]}>

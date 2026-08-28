@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Linking, Alert, ScrollView,
 } from 'react-native';
@@ -10,6 +10,22 @@ import api from '../utils/api';
 import useOrderStore from '../store/useOrderStore';
 
 const SOCKET_URL = 'https://porterapp-7y12.onrender.com';
+
+const AVG_SPEED_KMH = { bike: 30, mini_truck: 25, tempo: 22, large_truck: 18 };
+
+const haversineKm = (lat1, lng1, lat2, lng2) => {
+  const toRad = d => d * Math.PI / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+};
+
+const estimateEtaMinutes = (distanceKm, vehicleType) => {
+  const speed = AVG_SPEED_KMH[vehicleType] || 25;
+  return Math.max(1, Math.round((distanceKm / speed) * 60 + 3));
+};
 
 const STATUS_STEPS = [
   { key: 'accepted',   label: 'Driver Assigned' },
@@ -75,6 +91,16 @@ const TrackingScreen = ({ navigation, route }) => {
 
   const currentStep = STATUS_STEPS.findIndex(s => s.key === order?.status);
 
+  const liveEtaMinutes = useMemo(() => {
+    if (!driverLocation || !order) return null;
+    const target = ['pickup', 'in_transit'].includes(order.status) ? order.drop : order.pickup;
+    if (!target) return null;
+    const distanceKm = haversineKm(driverLocation.latitude, driverLocation.longitude, target.lat, target.lng);
+    return estimateEtaMinutes(distanceKm, order.vehicleType);
+  }, [driverLocation, order?.status]);
+
+  const etaLabel = order?.status === 'in_transit' ? 'Arriving at drop in' : 'Driver arriving in';
+
   return (
     <View style={styles.container}>
       <MapView
@@ -126,6 +152,12 @@ const TrackingScreen = ({ navigation, route }) => {
       {/* Driver Card */}
       {order?.driver && (
         <View style={styles.driverCard}>
+          {liveEtaMinutes != null && (
+            <View style={styles.etaBadge}>
+              <Icon name="clock-outline" size={16} color={COLORS.white} />
+              <Text style={styles.etaText}>{etaLabel} {liveEtaMinutes} min</Text>
+            </View>
+          )}
           <View style={styles.driverInfo}>
             <View style={styles.driverAvatar}>
               <Text style={{ fontSize: 28 }}>👤</Text>
@@ -198,6 +230,8 @@ const styles = StyleSheet.create({
   stepLine:         { position: 'absolute', top: 9, left: '60%', right: '-60%', height: 2, backgroundColor: COLORS.grayLight },
   stepLineActive:   { backgroundColor: COLORS.primary },
   driverCard:       { backgroundColor: COLORS.white, padding: 16, elevation: 8 },
+  etaBadge:         { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: COLORS.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, marginBottom: 12 },
+  etaText:          { color: COLORS.white, fontSize: SIZES.sm, fontWeight: '700' },
   driverInfo:       { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   driverAvatar:     { width: 52, height: 52, borderRadius: 26, backgroundColor: COLORS.bgLight, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   driverName:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary },
