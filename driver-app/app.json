@@ -28,7 +28,12 @@
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAyBnNXtmH2AHm-ctd8ZfegQvCzxmPRyO8"
+        }
+      }
     },
     "plugins": [
       "expo-location",
