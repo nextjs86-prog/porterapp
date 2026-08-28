@@ -14,8 +14,8 @@ exports.sendOtp = async (req, res) => {
     const otp = generateOTP();
     storeOTP(phone, otp);
     await sendOTP(phone, otp);
-    // In dev, return otp for testing
-    const devOtp = process.env.NODE_ENV !== 'production' ? otp : undefined;
+    // Return otp in the response for testing until real MSG91 credentials are configured
+    const devOtp = (process.env.MSG91_AUTH_KEY && process.env.MSG91_TEMPLATE_ID) ? undefined : otp;
     res.json({ message: 'OTP sent', ...(devOtp && { otp: devOtp }) });
   } catch (err) {
     res.status(500).json({ message: err.message });
