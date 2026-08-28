@@ -24,8 +24,8 @@ export default function LoginPage() {
   return (
     <div style={s.page}>
       <div style={s.card}>
-        <div style={s.logo}>🚚</div>
-        <h1 style={s.title}>QuickHaul Admin</h1>
+        <img src="/logo.png" alt="Sahara Logistics" style={s.logo} />
+        <h1 style={s.title}>Sahara Admin</h1>
         <p style={s.sub}>Sign in to your admin account</p>
 
         <form onSubmit={handleLogin} style={s.form}>
@@ -49,12 +49,12 @@ export default function LoginPage() {
 const s = {
   page:  { minHeight: '100vh', backgroundColor: '#1E3A8A', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 16 },
   card:  { backgroundColor: '#fff', borderRadius: 20, padding: 40, width: '100%', maxWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' },
-  logo:  { fontSize: 52, textAlign: 'center', marginBottom: 12 },
+  logo:  { width: 84, height: 84, display: 'block', margin: '0 auto 12px' },
   title: { fontSize: 26, fontWeight: 700, color: '#0F172A', textAlign: 'center' },
   sub:   { fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 28 },
   form:  { display: 'flex', flexDirection: 'column', gap: 16 },
   field: { display: 'flex', flexDirection: 'column', gap: 6 },
   label: { fontSize: 13, fontWeight: 600, color: '#64748B' },
   input: { padding: '12px 14px', borderRadius: 10, border: '1.5px solid #E2E8F0', fontSize: 15, outline: 'none' },
-  btn:   { backgroundColor: '#1E3A8A', color: '#fff', padding: '14px', borderRadius: 12, border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 },
+  btn:   { backgroundColor: '#E15A04', color: '#fff', padding: '14px', borderRadius: 12, border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginTop: 8 },
 };

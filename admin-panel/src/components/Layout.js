@@ -35,7 +35,12 @@ export default function Layout() {
       {/* Sidebar */}
       <aside style={{ ...styles.sidebar, width: collapsed ? 64 : 240 }}>
         <div style={styles.sidebarHeader}>
-          {!collapsed && <span style={styles.logo}>🚚 QuickHaul</span>}
+          {!collapsed && (
+            <span style={styles.logo}>
+              <img src="/logo.png" alt="Sahara Logistics" style={styles.logoImg} />
+              Sahara
+            </span>
+          )}
           <button style={styles.collapseBtn} onClick={() => setCollapsed(!collapsed)}>
             {collapsed ? '▶' : '◀'}
           </button>
@@ -75,11 +80,12 @@ const styles = {
   shell:          { display: 'flex', height: '100vh', overflow: 'hidden' },
   sidebar:        { backgroundColor: '#1E3A8A', display: 'flex', flexDirection: 'column', transition: 'width 0.2s', flexShrink: 0 },
   sidebarHeader:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)' },
-  logo:           { color: '#fff', fontWeight: 700, fontSize: 18 },
+  logo:           { display: 'flex', alignItems: 'center', gap: 10, color: '#fff', fontWeight: 700, fontSize: 18 },
+  logoImg:        { width: 32, height: 32, borderRadius: '50%', flexShrink: 0 },
   collapseBtn:    { background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: 6, padding: '4px 8px' },
   nav:            { flex: 1, padding: '12px 0', overflowY: 'auto' },
   navItem:        { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 14, transition: 'all 0.15s' },
-  navActive:      { backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', borderRight: '3px solid #3B82F6' },
+  navActive:      { backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', borderRight: '3px solid #E15A04' },
   navIcon:        { fontSize: 18, flexShrink: 0 },
   navLabel:       {},
   logoutBtn:      { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 14, borderTop: '1px solid rgba(255,255,255,0.1)' },
