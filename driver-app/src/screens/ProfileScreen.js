@@ -16,13 +16,18 @@ const DocStatus = ({ label, verified }) => (
   </View>
 );
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   const { driver, logout } = useDriverStore();
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
+      {
+        text: 'Logout', style: 'destructive', onPress: async () => {
+          await logout();
+          navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Login' }] });
+        },
+      },
     ]);
   };
 

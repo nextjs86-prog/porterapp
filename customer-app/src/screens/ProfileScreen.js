@@ -40,7 +40,12 @@ const ProfileScreen = ({ navigation }) => {
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
+      {
+        text: 'Logout', style: 'destructive', onPress: async () => {
+          await logout();
+          navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Login' }] });
+        },
+      },
     ]);
   };
 
