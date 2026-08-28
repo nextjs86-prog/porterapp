@@ -4,11 +4,9 @@ import {
   SafeAreaView, Platform, Alert,
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import LocationAutocomplete from '../components/LocationAutocomplete';
 import { COLORS, SIZES } from '../utils/theme';
 import useOrderStore from '../store/useOrderStore';
-
-const GOOGLE_API_KEY = 'YOUR_GOOGLE_MAPS_API_KEY';
 
 const VEHICLES = [
   { type: 'bike',        label: 'Bike',        icon: 'motorbike',    price: '₹40+', capacity: 'Upto 20kg' },
@@ -61,37 +59,9 @@ const BookingScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.locationInputs}>
-            <GooglePlacesAutocomplete
-              placeholder="Pickup location"
-              onPress={(data, details) => {
-                if (details) {
-                  setPickup({
-                    address: data.description,
-                    lat: details.geometry.location.lat,
-                    lng: details.geometry.location.lng,
-                  });
-                }
-              }}
-              query={{ key: GOOGLE_API_KEY, language: 'en', components: 'country:in' }}
-              fetchDetails={true}
-              styles={{ textInputContainer: styles.autocompleteContainer, textInput: styles.autocompleteInput }}
-            />
+            <LocationAutocomplete placeholder="Pickup location" onSelect={setPickup} />
             <View style={styles.divider} />
-            <GooglePlacesAutocomplete
-              placeholder="Drop location"
-              onPress={(data, details) => {
-                if (details) {
-                  setDrop({
-                    address: data.description,
-                    lat: details.geometry.location.lat,
-                    lng: details.geometry.location.lng,
-                  });
-                }
-              }}
-              query={{ key: GOOGLE_API_KEY, language: 'en', components: 'country:in' }}
-              fetchDetails={true}
-              styles={{ textInputContainer: styles.autocompleteContainer, textInput: styles.autocompleteInput }}
-            />
+            <LocationAutocomplete placeholder="Drop location" onSelect={setDrop} />
           </View>
         </View>
 
@@ -161,8 +131,6 @@ const styles = StyleSheet.create({
   dot:                { width: 12, height: 12, borderRadius: 6 },
   line:               { width: 2, flex: 1, backgroundColor: COLORS.grayLight, marginVertical: 4 },
   locationInputs:     { flex: 1 },
-  autocompleteContainer: { borderBottomWidth: 0 },
-  autocompleteInput:  { fontSize: SIZES.base, color: COLORS.textPrimary, backgroundColor: COLORS.bgLight, borderRadius: SIZES.radiusSm, height: 44 },
   divider:            { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 4 },
   sectionTitle:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginHorizontal: 16, marginTop: 8, marginBottom: 8 },
   vehicleRow:         { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 8, padding: 14, borderRadius: SIZES.radius, elevation: 1, borderWidth: 1.5, borderColor: 'transparent' },
