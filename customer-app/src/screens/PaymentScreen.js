@@ -14,7 +14,7 @@ const PAYMENT_METHODS = [
 ];
 
 const PaymentScreen = ({ navigation, route }) => {
-  const { orderId, amount } = route.params;
+  const { orderId, amount, nextScreen = 'Confirmation' } = route.params;
   const user = useAuthStore(s => s.user);
   const [selectedMethod, setSelectedMethod] = useState('upi');
   const [promoCode,      setPromoCode]      = useState('');
@@ -25,7 +25,7 @@ const PaymentScreen = ({ navigation, route }) => {
     try {
       if (selectedMethod === 'cod') {
         await api.post('/payment/cod-confirm', { orderId });
-        navigation.replace('Confirmation', { orderId });
+        navigation.replace(nextScreen, { orderId });
         return;
       }
 
@@ -51,7 +51,7 @@ const PaymentScreen = ({ navigation, route }) => {
         orderId,
       });
 
-      navigation.replace('Confirmation', { orderId });
+      navigation.replace(nextScreen, { orderId });
     } catch (err) {
       Alert.alert('Payment Failed', err.description || err.response?.data?.message || 'Payment failed');
     } finally {

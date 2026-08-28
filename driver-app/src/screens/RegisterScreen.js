@@ -9,10 +9,10 @@ import { COLORS, SIZES } from '../utils/theme';
 import api from '../utils/api';
 
 const VEHICLES = [
-  { type: 'bike',        label: 'Bike',        icon: 'motorbike'     },
-  { type: 'mini_truck',  label: 'Mini Truck',  icon: 'truck-outline' },
-  { type: 'tempo',       label: 'Tempo',       icon: 'truck'         },
-  { type: 'large_truck', label: 'Large Truck', icon: 'truck-fast'    },
+  { type: 'bike',        label: 'Bike',       icon: 'motorbike'     },
+  { type: 'mini_truck',  label: '3-Wheeler',  icon: 'truck-outline' },
+  { type: 'tempo',       label: 'Tata Ace',   icon: 'truck'         },
+  { type: 'large_truck', label: 'Tata 407',   icon: 'truck-fast'    },
 ];
 
 const Field = ({ label, ...props }) => (

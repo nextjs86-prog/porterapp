@@ -12,10 +12,15 @@ import useOrderStore from '../store/useOrderStore';
 import api from '../utils/api';
 
 const VEHICLES = [
-  { type: 'bike',        label: 'Bike',        emoji: '🏍️', price: '₹40+',  capacity: 'Upto 20kg'  },
-  { type: 'mini_truck',  label: 'Mini Truck',  emoji: '🚐', price: '₹100+', capacity: 'Upto 1 ton'  },
-  { type: 'tempo',       label: 'Tempo',       emoji: '🚚', price: '₹150+', capacity: 'Upto 2 ton'  },
-  { type: 'large_truck', label: 'Large Truck', emoji: '🚛', price: '₹250+', capacity: 'Upto 5 ton'  },
+  { type: 'bike',        label: 'Bike',       emoji: '🏍️', price: '₹40+',  capacity: 'Upto 20 kg'  },
+  { type: 'mini_truck',  label: '3-Wheeler',  emoji: '🛺', price: '₹100+', capacity: 'Upto 500 kg' },
+  { type: 'tempo',       label: 'Tata Ace',   emoji: '🚐', price: '₹150+', capacity: 'Upto 750 kg' },
+  { type: 'large_truck', label: 'Tata 407',   emoji: '🚛', price: '₹250+', capacity: 'Upto 2.5 ton' },
+];
+
+const PAYMENT_METHODS = [
+  { id: 'cod',        label: 'Cash on Delivery', icon: 'cash' },
+  { id: 'upi',        label: 'UPI / Online',     icon: 'bank-transfer' },
 ];
 
 const SCHEDULE_OPTIONS = [
@@ -46,6 +51,8 @@ const BookingScreen = ({ navigation }) => {
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [goodsNotes, setGoodsNotes] = useState('');
+  const [goodsWeight, setGoodsWeight] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cod');
 
   useEffect(() => {
     if (pickup && drop) getFareEstimate();
@@ -96,13 +103,14 @@ const BookingScreen = ({ navigation }) => {
     if (!pickup || !drop) return Alert.alert('Error', 'Select pickup and drop locations');
     try {
       const scheduledAt = resolveScheduledAt(scheduleKey);
+      const notes = [goodsNotes.trim(), goodsWeight.trim() && `${goodsWeight.trim()} kg`].filter(Boolean).join(' • ');
       const order = await createOrder({
         pickup, drop, vehicleType: selectedVehicle,
-        paymentMethod: 'cod',
+        paymentMethod,
         promoDiscount: appliedPromo?.discount || 0,
         promoCode: appliedPromo ? promoCode.trim().toUpperCase() : undefined,
         scheduledAt,
-        notes: goodsNotes.trim() || undefined,
+        notes: notes || undefined,
       });
 
       if (order.status === 'pending' && scheduledAt) {
@@ -111,6 +119,8 @@ const BookingScreen = ({ navigation }) => {
           `Your delivery is scheduled for ${scheduledAt.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}. We'll find a driver closer to the time.`,
           [{ text: 'OK', onPress: () => navigation.navigate('Main') }]
         );
+      } else if (paymentMethod !== 'cod') {
+        navigation.navigate('Payment', { orderId: order._id, amount: finalTotal, nextScreen: 'SearchDriver' });
       } else {
         navigation.navigate('SearchDriver', { orderId: order._id });
       }
@@ -156,13 +166,23 @@ const BookingScreen = ({ navigation }) => {
 
         {/* Goods description */}
         <Text style={styles.sectionTitle}>What are you sending?</Text>
-        <TextInput
-          style={styles.goodsInput}
-          placeholder="e.g. Furniture, boxes, documents (optional)"
-          placeholderTextColor={COLORS.gray}
-          value={goodsNotes}
-          onChangeText={setGoodsNotes}
-        />
+        <View style={styles.goodsRow}>
+          <TextInput
+            style={[styles.goodsInput, { flex: 2 }]}
+            placeholder="e.g. Furniture, boxes, documents"
+            placeholderTextColor={COLORS.gray}
+            value={goodsNotes}
+            onChangeText={setGoodsNotes}
+          />
+          <TextInput
+            style={[styles.goodsInput, { flex: 1 }]}
+            placeholder="Weight (kg)"
+            placeholderTextColor={COLORS.gray}
+            keyboardType="numeric"
+            value={goodsWeight}
+            onChangeText={setGoodsWeight}
+          />
+        </View>
 
         {/* Schedule */}
         <Text style={styles.sectionTitle}>When</Text>
@@ -197,6 +217,21 @@ const BookingScreen = ({ navigation }) => {
             {selectedVehicle === v.type && <Icon name="check-circle" size={20} color={COLORS.accent} style={{ marginLeft: 8 }} />}
           </TouchableOpacity>
         ))}
+
+        {/* Payment Method */}
+        <Text style={styles.sectionTitle}>Payment Method</Text>
+        <View style={styles.paymentRow}>
+          {PAYMENT_METHODS.map(m => (
+            <TouchableOpacity
+              key={m.id}
+              style={[styles.paymentChip, paymentMethod === m.id && styles.paymentChipActive]}
+              onPress={() => setPaymentMethod(m.id)}
+            >
+              <Icon name={m.icon} size={18} color={paymentMethod === m.id ? COLORS.accent : COLORS.textSecondary} />
+              <Text style={[styles.paymentChipText, paymentMethod === m.id && styles.paymentChipTextActive]}>{m.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* Promo Code */}
         {fareEstimate && (
@@ -276,13 +311,19 @@ const styles = StyleSheet.create({
   divider:            { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 4 },
   currentLocBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -8, marginBottom: 8, padding: 8 },
   currentLocText:     { fontSize: SIZES.sm, color: COLORS.primary, fontWeight: '600' },
-  goodsInput:         { backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 16, padding: 14, borderRadius: SIZES.radius, fontSize: SIZES.sm, color: COLORS.textPrimary, elevation: 1 },
+  goodsRow:           { flexDirection: 'row', gap: 8, marginHorizontal: 16, marginBottom: 16 },
+  goodsInput:         { backgroundColor: COLORS.white, padding: 14, borderRadius: SIZES.radius, fontSize: SIZES.sm, color: COLORS.textPrimary, elevation: 1 },
   sectionTitle:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginHorizontal: 16, marginTop: 8, marginBottom: 8 },
   scheduleRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginHorizontal: 16, marginBottom: 16 },
   scheduleChip:       { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.grayLight, backgroundColor: COLORS.white },
   scheduleChipActive: { borderColor: COLORS.accent, backgroundColor: '#FFF3E9' },
   scheduleChipText:   { fontSize: SIZES.sm, color: COLORS.textSecondary, fontWeight: '600' },
   scheduleChipTextActive: { color: COLORS.accent },
+  paymentRow:         { flexDirection: 'row', gap: 10, marginHorizontal: 16, marginBottom: 16 },
+  paymentChip:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: COLORS.white, paddingVertical: 12, borderRadius: SIZES.radius, borderWidth: 1.5, borderColor: 'transparent', elevation: 1 },
+  paymentChipActive:  { borderColor: COLORS.accent, backgroundColor: '#FFF3E9' },
+  paymentChipText:    { fontSize: SIZES.sm, color: COLORS.textSecondary, fontWeight: '600' },
+  paymentChipTextActive: { color: COLORS.accent },
   promoCard:          { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: SIZES.radiusLg, elevation: 2 },
   promoInput:         { flex: 1, fontSize: SIZES.sm, color: COLORS.textPrimary },
   promoBtn:           { backgroundColor: COLORS.accent, paddingHorizontal: 14, paddingVertical: 8, borderRadius: SIZES.radiusSm },
