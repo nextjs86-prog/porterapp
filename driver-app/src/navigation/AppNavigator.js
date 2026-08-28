@@ -14,6 +14,7 @@ import IncomingOrderScreen from '../screens/IncomingOrderScreen';
 import NavigationScreen    from '../screens/NavigationScreen';
 import EarningsScreen      from '../screens/EarningsScreen';
 import ProfileScreen       from '../screens/ProfileScreen';
+import TripsScreen         from '../screens/TripsScreen';
 
 import useDriverStore from '../store/useDriverStore';
 
@@ -52,6 +53,7 @@ const AppNavigator = () => {
         <Stack.Screen name="Main"           component={MainTabs}            />
         <Stack.Screen name="IncomingOrder"  component={IncomingOrderScreen} />
         <Stack.Screen name="Navigation"     component={NavigationScreen}    />
+        <Stack.Screen name="Trips"          component={TripsScreen}         />
       </Stack.Navigator>
     </NavigationContainer>
   );

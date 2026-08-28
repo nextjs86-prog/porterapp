@@ -135,10 +135,10 @@ const DashboardScreen = ({ navigation }) => {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActions}>
           {[
-            { icon: 'cash',           label: 'Earnings',  action: () => {} },
-            { icon: 'history',        label: 'Trips',     action: () => {} },
-            { icon: 'account',        label: 'Profile',   action: () => {} },
-            { icon: 'headset',        label: 'Support',   action: () => {} },
+            { icon: 'cash',    label: 'Earnings', action: () => navigation.navigate('Earnings') },
+            { icon: 'history', label: 'Trips',     action: () => navigation.getParent()?.navigate('Trips') },
+            { icon: 'account', label: 'Profile',   action: () => navigation.navigate('Profile') },
+            { icon: 'headset', label: 'Support',   action: () => Alert.alert('Support', 'Need help? Call us at +91 98765 43210 or email support@saharalogistics.com') },
           ].map(({ icon, label, action }) => (
             <TouchableOpacity key={label} style={styles.quickBtn} onPress={action}>
               <View style={styles.quickIcon}><Icon name={icon} size={22} color={COLORS.primary} /></View>
