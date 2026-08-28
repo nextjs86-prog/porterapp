@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -23,6 +24,12 @@ app.use((req, _res, next) => {
   req.io = io;
   next();
 });
+
+// Serve uploaded driver documents/photos
+// NOTE: Render's free tier has an ephemeral filesystem — uploaded files are
+// wiped on every restart/redeploy. Fine for a demo, but move to Cloudinary/S3
+// before relying on this for real driver documents.
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect DB
 connectDB();
