@@ -6,6 +6,8 @@ const { calculateFare } = require('../utils/fareCalculator');
 const { sendPushNotification } = require('../utils/fcmService');
 const { haversineKm, estimateEtaMinutes } = require('../utils/geo');
 
+const NEARBY_RADIUS_METERS = 5000; // 5 km
+
 exports.fareEstimate = async (req, res) => {
   try {
     const { vehicleType, distanceKm } = req.body;
@@ -31,7 +33,7 @@ exports.getNearbyDrivers = async (req, res) => {
       currentLocation: {
         $near: {
           $geometry: { type: 'Point', coordinates: [Number(lng), Number(lat)] },
-          $maxDistance: 10000,
+          $maxDistance: NEARBY_RADIUS_METERS,
         },
       },
     }).select('name vehicleType vehicleNumber rating currentLocation').limit(20);
@@ -96,7 +98,7 @@ exports.createOrder = async (req, res) => {
       currentLocation: {
         $near: {
           $geometry: { type: 'Point', coordinates: [pickup.lng, pickup.lat] },
-          $maxDistance: 10000,
+          $maxDistance: NEARBY_RADIUS_METERS,
         },
       },
     }).limit(5);
