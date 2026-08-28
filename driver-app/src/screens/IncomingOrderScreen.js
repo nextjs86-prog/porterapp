@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { Audio } from 'expo-av';
 import Icon from '@expo/vector-icons/MaterialCommunityIcons';
 import { COLORS, SIZES } from '../utils/theme';
 import useDriverStore from '../store/useDriverStore';
@@ -11,6 +12,7 @@ const IncomingOrderScreen = ({ navigation, route }) => {
   const [timer,   setTimer]   = useState(TIMEOUT_SECS);
   const [loading, setLoading] = useState(false);
   const progress = useRef(new Animated.Value(1)).current;
+  const soundRef = useRef(null);
   const acceptOrder = useDriverStore(s => s.acceptOrder);
 
   useEffect(() => {
@@ -25,10 +27,28 @@ const IncomingOrderScreen = ({ navigation, route }) => {
       });
     }, 1000);
 
-    return () => clearInterval(interval);
+    (async () => {
+      try {
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+        const { sound } = await Audio.Sound.createAsync(
+          require('../../assets/notification.wav'),
+          { isLooping: true, volume: 1.0 }
+        );
+        soundRef.current = sound;
+        await sound.playAsync();
+      } catch (err) { console.warn('Notification sound failed', err); }
+    })();
+
+    return () => {
+      clearInterval(interval);
+      soundRef.current?.unloadAsync();
+    };
   }, []);
 
+  const stopSound = () => soundRef.current?.stopAsync();
+
   const handleAccept = async () => {
+    stopSound();
     setLoading(true);
     try {
       await acceptOrder(order.orderId);
@@ -38,7 +58,7 @@ const IncomingOrderScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleReject = () => navigation.goBack();
+  const handleReject = () => { stopSound(); navigation.goBack(); };
 
   const progressWidth = progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
