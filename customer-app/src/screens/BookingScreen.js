@@ -45,6 +45,7 @@ const BookingScreen = ({ navigation }) => {
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [goodsNotes, setGoodsNotes] = useState('');
 
   useEffect(() => {
     if (pickup && drop) getFareEstimate();
@@ -101,6 +102,7 @@ const BookingScreen = ({ navigation }) => {
         promoDiscount: appliedPromo?.discount || 0,
         promoCode: appliedPromo ? promoCode.trim().toUpperCase() : undefined,
         scheduledAt,
+        notes: goodsNotes.trim() || undefined,
       });
 
       if (order.status === 'pending' && scheduledAt) {
@@ -151,6 +153,16 @@ const BookingScreen = ({ navigation }) => {
           <Icon name="crosshairs-gps" size={18} color={COLORS.primary} />
           <Text style={styles.currentLocText}>{locatingMe ? 'Locating...' : 'Use current location for pickup'}</Text>
         </TouchableOpacity>
+
+        {/* Goods description */}
+        <Text style={styles.sectionTitle}>What are you sending?</Text>
+        <TextInput
+          style={styles.goodsInput}
+          placeholder="e.g. Furniture, boxes, documents (optional)"
+          placeholderTextColor={COLORS.gray}
+          value={goodsNotes}
+          onChangeText={setGoodsNotes}
+        />
 
         {/* Schedule */}
         <Text style={styles.sectionTitle}>When</Text>
@@ -264,6 +276,7 @@ const styles = StyleSheet.create({
   divider:            { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 4 },
   currentLocBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -8, marginBottom: 8, padding: 8 },
   currentLocText:     { fontSize: SIZES.sm, color: COLORS.primary, fontWeight: '600' },
+  goodsInput:         { backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 16, padding: 14, borderRadius: SIZES.radius, fontSize: SIZES.sm, color: COLORS.textPrimary, elevation: 1 },
   sectionTitle:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginHorizontal: 16, marginTop: 8, marginBottom: 8 },
   scheduleRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginHorizontal: 16, marginBottom: 16 },
   scheduleChip:       { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.grayLight, backgroundColor: COLORS.white },

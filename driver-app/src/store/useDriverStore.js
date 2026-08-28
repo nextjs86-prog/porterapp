@@ -49,8 +49,8 @@ const useDriverStore = create((set, get) => ({
     return res.data;
   },
 
-  updateOrderStatus: async (orderId, status) => {
-    const res = await api.put(`/order/${orderId}/status`, { status });
+  updateOrderStatus: async (orderId, status, otp) => {
+    const res = await api.put(`/order/${orderId}/status`, { status, otp });
     set({ currentOrder: res.data });
     return res.data;
   },

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Linking, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Linking, Alert, Modal, TextInput } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from '@expo/vector-icons/MaterialCommunityIcons';
 import { COLORS, SIZES } from '../utils/theme';
@@ -17,6 +17,8 @@ const NavigationScreen = ({ navigation, route }) => {
   const [order,   setOrder]   = useState(null);
   const [stepIdx, setStepIdx] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
   const updateOrderStatus = useDriverStore(s => s.updateOrderStatus);
   const mapRef = useRef(null);
 
@@ -29,12 +31,12 @@ const NavigationScreen = ({ navigation, route }) => {
     if (idx >= 0) setStepIdx(idx);
   };
 
-  const handleNextStep = async () => {
+  const advanceStep = async (otp) => {
     const step = ORDER_STEPS[stepIdx];
     if (!step) return;
     setLoading(true);
     try {
-      await updateOrderStatus(orderId, step.nextStatus);
+      await updateOrderStatus(orderId, step.nextStatus, otp);
       if (step.nextStatus === 'delivered') {
         Alert.alert('Order Delivered!', 'Great job! You have completed the delivery.', [
           { text: 'OK', onPress: () => navigation.replace('Main') },
@@ -44,8 +46,24 @@ const NavigationScreen = ({ navigation, route }) => {
         fetchOrder();
       }
     } catch (err) {
-      Alert.alert('Error', 'Failed to update status');
+      Alert.alert('Error', err.response?.data?.message || 'Failed to update status');
     } finally { setLoading(false); }
+  };
+
+  const handleNextStep = () => {
+    const step = ORDER_STEPS[stepIdx];
+    if (step?.nextStatus === 'in_transit') {
+      setOtpInput('');
+      setShowOtpModal(true);
+    } else {
+      advanceStep();
+    }
+  };
+
+  const handleConfirmOtp = () => {
+    if (otpInput.trim().length !== 4) return Alert.alert('Error', 'Enter the 4-digit OTP shared by the customer');
+    setShowOtpModal(false);
+    advanceStep(otpInput.trim());
   };
 
   const openMaps = (lat, lng, label) => {
@@ -143,6 +161,33 @@ const NavigationScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         )}
       </View>
+
+      <Modal visible={showOtpModal} transparent animationType="fade" onRequestClose={() => setShowOtpModal(false)}>
+        <View style={styles.otpOverlay}>
+          <View style={styles.otpModal}>
+            <Text style={styles.otpTitle}>Enter Pickup OTP</Text>
+            <Text style={styles.otpSub}>Ask the customer for the 4-digit code to confirm goods handover</Text>
+            <TextInput
+              style={styles.otpInput}
+              keyboardType="numeric"
+              maxLength={4}
+              value={otpInput}
+              onChangeText={setOtpInput}
+              placeholder="0000"
+              placeholderTextColor={COLORS.gray}
+              autoFocus
+            />
+            <View style={styles.otpBtnRow}>
+              <TouchableOpacity style={styles.otpCancelBtn} onPress={() => setShowOtpModal(false)}>
+                <Text style={styles.otpCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.otpConfirmBtn} onPress={handleConfirmOtp}>
+                <Text style={styles.otpConfirmText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -169,6 +214,16 @@ const styles = StyleSheet.create({
   fareVal:       { fontSize: SIZES.xl, fontWeight: '700', color: COLORS.primary },
   actionBtn:     { backgroundColor: COLORS.primary, padding: 16, borderRadius: SIZES.radiusLg, alignItems: 'center', marginTop: 8 },
   actionBtnText: { color: COLORS.white, fontSize: SIZES.base, fontWeight: '700' },
+  otpOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  otpModal:      { backgroundColor: COLORS.white, borderRadius: SIZES.radiusLg, padding: 24, width: '100%', alignItems: 'center' },
+  otpTitle:      { fontSize: SIZES.xl, fontWeight: '700', color: COLORS.textPrimary },
+  otpSub:        { fontSize: SIZES.sm, color: COLORS.textSecondary, textAlign: 'center', marginTop: 8, marginBottom: 20 },
+  otpInput:      { borderWidth: 1.5, borderColor: COLORS.grayLight, borderRadius: SIZES.radius, fontSize: SIZES.xxl, textAlign: 'center', letterSpacing: 8, width: 160, padding: 12, color: COLORS.textPrimary },
+  otpBtnRow:     { flexDirection: 'row', gap: 12, marginTop: 24, width: '100%' },
+  otpCancelBtn:  { flex: 1, padding: 14, borderRadius: SIZES.radius, borderWidth: 1.5, borderColor: COLORS.grayLight, alignItems: 'center' },
+  otpCancelText: { color: COLORS.textSecondary, fontWeight: '600' },
+  otpConfirmBtn: { flex: 1, padding: 14, borderRadius: SIZES.radius, backgroundColor: COLORS.primary, alignItems: 'center' },
+  otpConfirmText:{ color: COLORS.white, fontWeight: '700' },
 });
 
 export default NavigationScreen;

@@ -177,6 +177,13 @@ const TrackingScreen = ({ navigation, route }) => {
             </View>
           </View>
 
+          {['accepted', 'pickup'].includes(order.status) && order.otp && (
+            <View style={styles.otpCard}>
+              <Text style={styles.otpLabel}>Share this OTP with your driver at pickup</Text>
+              <Text style={styles.otpVal}>{order.otp}</Text>
+            </View>
+          )}
+
           <View style={styles.fareRow}>
             <Text style={styles.fareLabel}>Total Fare</Text>
             <Text style={styles.fareVal}>₹{order.fareBreakdown?.total}</Text>
@@ -240,6 +247,9 @@ const styles = StyleSheet.create({
   driverActions:    { flexDirection: 'row', gap: 8 },
   actionBtn:        { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center' },
   cancelActionBtn:  { backgroundColor: '#FEF2F2' },
+  otpCard:          { backgroundColor: '#FFF3E9', borderRadius: SIZES.radius, padding: 12, alignItems: 'center', marginBottom: 12 },
+  otpLabel:         { fontSize: SIZES.xs, color: COLORS.textSecondary },
+  otpVal:           { fontSize: SIZES.xxl, fontWeight: '700', color: COLORS.accent, letterSpacing: 6, marginTop: 2 },
   fareRow:          { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 12, borderTopWidth: 1, borderTopColor: COLORS.grayLight },
   fareLabel:        { fontSize: SIZES.base, color: COLORS.textSecondary },
   fareVal:          { fontSize: SIZES.xl, fontWeight: '700', color: COLORS.primary },

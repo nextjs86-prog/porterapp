@@ -114,6 +114,9 @@ exports.createOrder = async (req, res) => {
       req.io?.to(`driver:${driver._id}`).emit('order:new', {
         orderId: order._id,
         pickup, drop, fareBreakdown, vehicleType,
+        distanceKm: order.distanceKm,
+        durationMins: order.durationMins,
+        notes: order.notes,
       });
     }
 
@@ -129,6 +132,10 @@ exports.getOrder = async (req, res) => {
       .populate('driver',   'name phone photo vehicleType vehicleNumber rating currentLocation')
       .populate('customer', 'name phone');
     if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    const isOwner = order.customer?._id?.equals(req.user._id) || order.driver?._id?.equals(req.user._id);
+    if (!isOwner) return res.status(403).json({ message: 'Not authorized to view this order' });
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -137,7 +144,17 @@ exports.getOrder = async (req, res) => {
 
 exports.updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, otp } = req.body;
+
+    // Starting the delivery requires the customer's pickup OTP as proof goods were handed over
+    if (status === 'in_transit') {
+      const existing = await Order.findById(req.params.id).select('otp');
+      if (!existing) return res.status(404).json({ message: 'Order not found' });
+      if (!otp || otp !== existing.otp) {
+        return res.status(400).json({ message: 'Incorrect pickup OTP' });
+      }
+    }
+
     const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true })
       .populate('customer', 'name fcmToken');
 

@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { protect } = require('../middleware/auth');
+const { protect, protectAny } = require('../middleware/auth');
 const {
   createOrder, getOrder, updateOrderStatus,
   getTracking, acceptOrder, rejectOrder,
@@ -13,7 +13,7 @@ const driverAuth   = protect('driver');
 router.get('/nearby-drivers',     customerAuth, getNearbyDrivers);
 router.post('/estimate',          customerAuth, fareEstimate);
 router.post('/create',            customerAuth, createOrder);
-router.get('/:id',                customerAuth, getOrder);
+router.get('/:id',                protectAny,   getOrder);
 router.put('/:id/status',         driverAuth,   updateOrderStatus);
 router.get('/:id/tracking',       customerAuth, getTracking);
 router.post('/:id/accept',        driverAuth,   acceptOrder);

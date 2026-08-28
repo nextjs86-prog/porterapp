@@ -81,11 +81,24 @@ const IncomingOrderScreen = ({ navigation, route }) => {
               <Icon name="truck" size={16} color={COLORS.textSecondary} />
               <Text style={styles.detailText}>{order.vehicleType?.replace('_', ' ')}</Text>
             </View>
+            {order.distanceKm != null && (
+              <View style={styles.detail}>
+                <Icon name="map-marker-distance" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.detailText}>{order.distanceKm} km</Text>
+              </View>
+            )}
             <View style={styles.detail}>
               <Icon name="currency-inr" size={16} color={COLORS.success} />
               <Text style={[styles.detailText, { color: COLORS.success, fontWeight: '700' }]}>₹{order.fareBreakdown?.total}</Text>
             </View>
           </View>
+
+          {order.notes ? (
+            <View style={styles.goodsRow}>
+              <Icon name="package-variant" size={16} color={COLORS.textSecondary} />
+              <Text style={styles.goodsText} numberOfLines={2}>{order.notes}</Text>
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.actions}>
@@ -122,6 +135,8 @@ const styles = StyleSheet.create({
   detailsRow:      { flexDirection: 'row', justifyContent: 'space-around' },
   detail:          { flexDirection: 'row', alignItems: 'center', gap: 6 },
   detailText:      { fontSize: SIZES.sm, color: COLORS.textSecondary, textTransform: 'capitalize' },
+  goodsRow:        { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: COLORS.grayLight },
+  goodsText:       { fontSize: SIZES.sm, color: COLORS.textSecondary, flex: 1 },
   actions:         { flexDirection: 'row', gap: 16 },
   rejectBtn:       { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 2, borderColor: COLORS.error, borderRadius: SIZES.radiusLg, padding: 16 },
   rejectText:      { fontSize: SIZES.base, fontWeight: '700', color: COLORS.error },
