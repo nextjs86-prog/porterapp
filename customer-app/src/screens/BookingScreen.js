@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  SafeAreaView, Platform, Alert,
+  SafeAreaView, Platform, Alert, TextInput,
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -9,6 +9,7 @@ import axios from 'axios';
 import LocationAutocomplete, { LOCATIONIQ_KEY } from '../components/LocationAutocomplete';
 import { COLORS, SIZES } from '../utils/theme';
 import useOrderStore from '../store/useOrderStore';
+import api from '../utils/api';
 
 const VEHICLES = [
   { type: 'bike',        label: 'Bike',        emoji: '🏍️', price: '₹40+',  capacity: 'Upto 20kg'  },
@@ -17,6 +18,22 @@ const VEHICLES = [
   { type: 'large_truck', label: 'Large Truck', emoji: '🚛', price: '₹250+', capacity: 'Upto 5 ton'  },
 ];
 
+const SCHEDULE_OPTIONS = [
+  { key: 'now',      label: 'Now' },
+  { key: '30min',    label: 'In 30 min' },
+  { key: '1hr',      label: 'In 1 hour' },
+  { key: 'tomorrow', label: 'Tomorrow 9 AM' },
+];
+
+const resolveScheduledAt = (key) => {
+  if (key === 'now') return undefined;
+  const d = new Date();
+  if (key === '30min') d.setMinutes(d.getMinutes() + 30);
+  if (key === '1hr') d.setHours(d.getHours() + 1);
+  if (key === 'tomorrow') { d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); }
+  return d;
+};
+
 const BookingScreen = ({ navigation }) => {
   const {
     pickup, drop, selectedVehicle, fareEstimate,
@@ -24,10 +41,33 @@ const BookingScreen = ({ navigation }) => {
   } = useOrderStore();
   const [pickupText, setPickupText] = useState();
   const [locatingMe, setLocatingMe] = useState(false);
+  const [scheduleKey, setScheduleKey] = useState('now');
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   useEffect(() => {
     if (pickup && drop) getFareEstimate();
+    setAppliedPromo(null);
   }, [pickup, drop, selectedVehicle]);
+
+  const finalTotal = fareEstimate ? Math.max(0, fareEstimate.total - (appliedPromo?.discount || 0)) : null;
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim() || !fareEstimate) return;
+    setApplyingPromo(true);
+    try {
+      const res = await api.post('/customer/promo/apply', {
+        code: promoCode.trim(), orderTotal: fareEstimate.total,
+      });
+      setAppliedPromo(res.data);
+    } catch (err) {
+      setAppliedPromo(null);
+      Alert.alert('Promo Code', err.response?.data?.message || 'Could not apply promo code');
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
 
   const useCurrentLocation = async () => {
     setLocatingMe(true);
@@ -54,12 +94,24 @@ const BookingScreen = ({ navigation }) => {
   const handleBook = async () => {
     if (!pickup || !drop) return Alert.alert('Error', 'Select pickup and drop locations');
     try {
+      const scheduledAt = resolveScheduledAt(scheduleKey);
       const order = await createOrder({
         pickup, drop, vehicleType: selectedVehicle,
         paymentMethod: 'cod',
-        promoDiscount: 0,
+        promoDiscount: appliedPromo?.discount || 0,
+        promoCode: appliedPromo ? promoCode.trim().toUpperCase() : undefined,
+        scheduledAt,
       });
-      navigation.navigate('SearchDriver', { orderId: order._id });
+
+      if (order.status === 'pending' && scheduledAt) {
+        Alert.alert(
+          'Booking Scheduled',
+          `Your delivery is scheduled for ${scheduledAt.toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}. We'll find a driver closer to the time.`,
+          [{ text: 'OK', onPress: () => navigation.navigate('Main') }]
+        );
+      } else {
+        navigation.navigate('SearchDriver', { orderId: order._id });
+      }
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Booking failed');
     }
@@ -100,6 +152,20 @@ const BookingScreen = ({ navigation }) => {
           <Text style={styles.currentLocText}>{locatingMe ? 'Locating...' : 'Use current location for pickup'}</Text>
         </TouchableOpacity>
 
+        {/* Schedule */}
+        <Text style={styles.sectionTitle}>When</Text>
+        <View style={styles.scheduleRow}>
+          {SCHEDULE_OPTIONS.map(opt => (
+            <TouchableOpacity
+              key={opt.key}
+              style={[styles.scheduleChip, scheduleKey === opt.key && styles.scheduleChipActive]}
+              onPress={() => setScheduleKey(opt.key)}
+            >
+              <Text style={[styles.scheduleChipText, scheduleKey === opt.key && styles.scheduleChipTextActive]}>{opt.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Vehicle Selection */}
         <Text style={styles.sectionTitle}>Choose Vehicle</Text>
         {VEHICLES.map(v => (
@@ -120,6 +186,29 @@ const BookingScreen = ({ navigation }) => {
           </TouchableOpacity>
         ))}
 
+        {/* Promo Code */}
+        {fareEstimate && (
+          <View style={styles.promoCard}>
+            <Icon name="tag-outline" size={20} color={COLORS.accent} />
+            <TextInput
+              style={styles.promoInput}
+              placeholder="Enter promo code"
+              placeholderTextColor={COLORS.gray}
+              autoCapitalize="characters"
+              value={promoCode}
+              onChangeText={(t) => { setPromoCode(t); setAppliedPromo(null); }}
+              editable={!appliedPromo}
+            />
+            <TouchableOpacity
+              style={styles.promoBtn}
+              onPress={appliedPromo ? () => { setAppliedPromo(null); setPromoCode(''); } : handleApplyPromo}
+              disabled={applyingPromo || !promoCode.trim()}
+            >
+              <Text style={styles.promoBtnText}>{applyingPromo ? '...' : appliedPromo ? 'Remove' : 'Apply'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Fare Estimate */}
         {fareEstimate && (
           <View style={styles.fareCard}>
@@ -130,9 +219,15 @@ const BookingScreen = ({ navigation }) => {
             )}
             <View style={styles.fareRow}><Text style={styles.fareLabel}>Base Fare</Text><Text style={styles.fareVal}>₹{fareEstimate.baseFare}</Text></View>
             <View style={styles.fareRow}><Text style={styles.fareLabel}>Distance Fare</Text><Text style={styles.fareVal}>₹{fareEstimate.distanceFare?.toFixed(0)}</Text></View>
+            {appliedPromo && (
+              <View style={styles.fareRow}>
+                <Text style={[styles.fareLabel, { color: COLORS.success }]}>Promo ({promoCode.toUpperCase()})</Text>
+                <Text style={[styles.fareVal, { color: COLORS.success }]}>-₹{appliedPromo.discount}</Text>
+              </View>
+            )}
             <View style={[styles.fareRow, styles.totalRow]}>
               <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalVal}>₹{fareEstimate.total}</Text>
+              <Text style={styles.totalVal}>₹{finalTotal}</Text>
             </View>
           </View>
         )}
@@ -143,7 +238,7 @@ const BookingScreen = ({ navigation }) => {
       <View style={styles.footer}>
         <View>
           <Text style={styles.footerLabel}>Estimated Fare</Text>
-          <Text style={styles.footerFare}>{fareEstimate ? `₹${fareEstimate.total}` : '—'}</Text>
+          <Text style={styles.footerFare}>{finalTotal != null ? `₹${finalTotal}` : '—'}</Text>
         </View>
         <TouchableOpacity
           style={[styles.bookBtn, isLoading && styles.bookBtnDisabled]}
@@ -170,6 +265,15 @@ const styles = StyleSheet.create({
   currentLocBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -8, marginBottom: 8, padding: 8 },
   currentLocText:     { fontSize: SIZES.sm, color: COLORS.primary, fontWeight: '600' },
   sectionTitle:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginHorizontal: 16, marginTop: 8, marginBottom: 8 },
+  scheduleRow:        { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginHorizontal: 16, marginBottom: 16 },
+  scheduleChip:       { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.grayLight, backgroundColor: COLORS.white },
+  scheduleChipActive: { borderColor: COLORS.accent, backgroundColor: '#FFF3E9' },
+  scheduleChipText:   { fontSize: SIZES.sm, color: COLORS.textSecondary, fontWeight: '600' },
+  scheduleChipTextActive: { color: COLORS.accent },
+  promoCard:          { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: SIZES.radiusLg, elevation: 2 },
+  promoInput:         { flex: 1, fontSize: SIZES.sm, color: COLORS.textPrimary },
+  promoBtn:           { backgroundColor: COLORS.accent, paddingHorizontal: 14, paddingVertical: 8, borderRadius: SIZES.radiusSm },
+  promoBtnText:       { color: COLORS.white, fontSize: SIZES.sm, fontWeight: '700' },
   vehicleRow:         { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 10, padding: 14, borderRadius: SIZES.radius, elevation: 2, borderWidth: 1.5, borderColor: 'transparent' },
   vehicleRowActive:   { borderColor: COLORS.accent, backgroundColor: '#FFF3E9' },
   vehicleIcon:        { width: 52, height: 52, borderRadius: 26, backgroundColor: COLORS.bgLight, justifyContent: 'center', alignItems: 'center', marginRight: 12 },

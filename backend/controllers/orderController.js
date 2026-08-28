@@ -1,6 +1,7 @@
-const Order   = require('../models/Order');
-const Driver  = require('../models/Driver');
-const Rating  = require('../models/Rating');
+const Order      = require('../models/Order');
+const Driver     = require('../models/Driver');
+const Rating     = require('../models/Rating');
+const PromoCode  = require('../models/PromoCode');
 const { calculateFare } = require('../utils/fareCalculator');
 const { sendPushNotification } = require('../utils/fcmService');
 const { haversineKm, estimateEtaMinutes } = require('../utils/geo');
@@ -58,10 +59,12 @@ exports.getNearbyDrivers = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    const { pickup, drop, vehicleType, scheduledAt, promoDiscount, paymentMethod, notes } = req.body;
+    const { pickup, drop, vehicleType, scheduledAt, promoDiscount, promoCode, paymentMethod, notes } = req.body;
 
     const distanceKm = haversineKm(pickup.lat, pickup.lng, drop.lat, drop.lng);
     const fareBreakdown = await calculateFare(vehicleType, distanceKm, promoDiscount || 0);
+
+    const isFutureBooking = scheduledAt && new Date(scheduledAt) > new Date();
 
     const order = await Order.create({
       customer: req.user._id,
@@ -71,9 +74,19 @@ exports.createOrder = async (req, res) => {
       fareBreakdown,
       paymentMethod,
       notes,
-      status: 'searching',
+      promoCode: promoCode || undefined,
+      status: isFutureBooking ? 'pending' : 'searching',
       otp: Math.floor(1000 + Math.random() * 9000).toString(),
     });
+
+    if (promoCode) {
+      await PromoCode.updateOne({ code: promoCode }, { $inc: { usedCount: 1 } });
+    }
+
+    // Scheduled orders are dispatched to drivers closer to the pickup time, not immediately
+    if (isFutureBooking) {
+      return res.status(201).json(order);
+    }
 
     // Find nearby drivers
     const nearbyDrivers = await Driver.find({

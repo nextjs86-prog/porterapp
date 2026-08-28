@@ -6,6 +6,7 @@ import useAuthStore from '../store/useAuthStore';
 const OTPScreen = ({ navigation, route }) => {
   const { phone } = route.params;
   const [otp, setOtp]         = useState(['', '', '', '', '', '']);
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
   const inputs = useRef([]);
@@ -24,7 +25,7 @@ const OTPScreen = ({ navigation, route }) => {
     if (code.length !== 6) return Alert.alert('Error', 'Enter complete 6-digit OTP');
     setLoading(true);
     try {
-      await verifyOtp(phone, code);
+      await verifyOtp(phone, code, referralCode.trim() || undefined);
       navigation.replace('Main');
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Invalid OTP');
@@ -70,6 +71,15 @@ const OTPScreen = ({ navigation, route }) => {
         ))}
       </View>
 
+      <TextInput
+        style={styles.referralInput}
+        placeholder="Referral code (optional)"
+        placeholderTextColor={COLORS.gray}
+        autoCapitalize="characters"
+        value={referralCode}
+        onChangeText={setReferralCode}
+      />
+
       <TouchableOpacity
         style={[styles.btn, loading && styles.btnDisabled]}
         onPress={handleVerify} disabled={loading}
@@ -95,6 +105,7 @@ const styles = StyleSheet.create({
   otpRow:       { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 40 },
   otpBox:       { width: 50, height: 56, borderWidth: 1.5, borderColor: COLORS.grayLight, borderRadius: SIZES.radius, textAlign: 'center', fontSize: SIZES.xxl, color: COLORS.textPrimary, backgroundColor: COLORS.white },
   otpBoxFilled: { borderColor: COLORS.primary, backgroundColor: '#EFF6FF' },
+  referralInput: { borderWidth: 1.5, borderColor: COLORS.grayLight, borderRadius: SIZES.radius, padding: 14, fontSize: SIZES.base, color: COLORS.textPrimary, backgroundColor: COLORS.white, marginBottom: 20 },
   btn:          { backgroundColor: COLORS.primary, padding: 16, borderRadius: SIZES.radius, alignItems: 'center', marginBottom: 20 },
   btnDisabled:  { opacity: 0.6 },
   btnText:      { color: COLORS.white, fontSize: SIZES.base, fontWeight: '700' },

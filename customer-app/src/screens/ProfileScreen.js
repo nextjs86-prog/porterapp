@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, SafeAreaView, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, SafeAreaView, TextInput, Share } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../utils/theme';
 import useAuthStore from '../store/useAuthStore';
@@ -29,6 +29,12 @@ const ProfileScreen = ({ navigation }) => {
     } catch (err) {
       Alert.alert('Error', 'Failed to update profile');
     }
+  };
+
+  const handleShareReferral = () => {
+    Share.share({
+      message: `Use my referral code ${user?.referralCode} on Sahara Logistics and get a discount on your first delivery! Download the app to get started.`,
+    });
   };
 
   const handleLogout = () => {
@@ -67,6 +73,15 @@ const ProfileScreen = ({ navigation }) => {
           )}
         </View>
 
+        {/* Wallet Card */}
+        <View style={styles.walletCard}>
+          <Icon name="wallet" size={24} color={COLORS.accent} />
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.referralLabel}>Wallet Balance</Text>
+            <Text style={styles.walletVal}>₹{user?.walletBalance || 0}</Text>
+          </View>
+        </View>
+
         {/* Referral Card */}
         {user?.referralCode && (
           <View style={styles.referralCard}>
@@ -74,8 +89,9 @@ const ProfileScreen = ({ navigation }) => {
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.referralLabel}>Your Referral Code</Text>
               <Text style={styles.referralCode}>{user.referralCode}</Text>
+              <Text style={styles.referralHint}>Share it — you both get ₹50 wallet credit</Text>
             </View>
-            <TouchableOpacity style={styles.shareBtn}>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShareReferral}>
               <Text style={styles.shareBtnText}>Share</Text>
             </TouchableOpacity>
           </View>
@@ -114,9 +130,12 @@ const styles = StyleSheet.create({
   saveBtnText:   { color: COLORS.primary, fontWeight: '700' },
   cancelBtn:     { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20 },
   cancelBtnText: { color: COLORS.white },
-  referralCard:  { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, margin: 16, padding: 16, borderRadius: SIZES.radiusLg, elevation: 2 },
+  walletCard:    { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, marginHorizontal: 16, marginTop: 16, padding: 16, borderRadius: SIZES.radiusLg, elevation: 2 },
+  walletVal:     { fontSize: SIZES.lg, fontWeight: '700', color: COLORS.accent },
+  referralCard:  { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, marginHorizontal: 16, marginTop: 12, marginBottom: 16, padding: 16, borderRadius: SIZES.radiusLg, elevation: 2 },
   referralLabel: { fontSize: SIZES.xs, color: COLORS.textSecondary },
   referralCode:  { fontSize: SIZES.lg, fontWeight: '700', color: COLORS.primary, letterSpacing: 2 },
+  referralHint:  { fontSize: SIZES.xs, color: COLORS.textSecondary, marginTop: 2 },
   shareBtn:      { backgroundColor: COLORS.primary, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   shareBtnText:  { color: COLORS.white, fontSize: SIZES.sm, fontWeight: '600' },
   menuSection:   { backgroundColor: COLORS.white, marginHorizontal: 16, borderRadius: SIZES.radiusLg, overflow: 'hidden', elevation: 2 },

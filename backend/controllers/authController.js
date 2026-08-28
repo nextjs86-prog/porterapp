@@ -6,6 +6,9 @@ const { generateOTP, sendOTP, storeOTP, verifyOTP } = require('../utils/otpServi
 // Generate a unique referral code
 const makeReferral = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
+const REFERRAL_SIGNUP_BONUS  = 50; // credited to the new user
+const REFERRAL_REFERRER_BONUS = 50; // credited to whoever referred them
+
 // POST /api/auth/send-otp
 exports.sendOtp = async (req, res) => {
   try {
@@ -25,13 +28,25 @@ exports.sendOtp = async (req, res) => {
 // POST /api/auth/verify-otp
 exports.verifyOtp = async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    const { phone, otp, referralCode } = req.body;
     if (!verifyOTP(phone, otp)) return res.status(400).json({ message: 'Invalid or expired OTP' });
 
     let user = await User.findOne({ phone });
     let isNew = false;
     if (!user) {
-      user = await User.create({ phone, referralCode: makeReferral() });
+      const userData = { phone, referralCode: makeReferral() };
+
+      if (referralCode) {
+        const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
+        if (referrer) {
+          userData.referredBy = referrer._id;
+          userData.walletBalance = REFERRAL_SIGNUP_BONUS;
+          referrer.walletBalance = (referrer.walletBalance || 0) + REFERRAL_REFERRER_BONUS;
+          await referrer.save();
+        }
+      }
+
+      user = await User.create(userData);
       isNew = true;
     }
     const token = generateToken(user._id, 'customer');
