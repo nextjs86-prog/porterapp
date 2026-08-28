@@ -11,10 +11,10 @@ import { COLORS, SIZES } from '../utils/theme';
 import useOrderStore from '../store/useOrderStore';
 
 const VEHICLES = [
-  { type: 'bike',        label: 'Bike',        icon: 'motorbike',    price: '₹40+', capacity: 'Upto 20kg' },
-  { type: 'mini_truck',  label: 'Mini Truck',  icon: 'truck-outline',price: '₹100+', capacity: 'Upto 1 ton' },
-  { type: 'tempo',       label: 'Tempo',       icon: 'truck',        price: '₹150+', capacity: 'Upto 2 ton' },
-  { type: 'large_truck', label: 'Large Truck', icon: 'truck-fast',   price: '₹250+', capacity: 'Upto 5 ton' },
+  { type: 'bike',        label: 'Bike',        emoji: '🏍️', price: '₹40+',  capacity: 'Upto 20kg'  },
+  { type: 'mini_truck',  label: 'Mini Truck',  emoji: '🚐', price: '₹100+', capacity: 'Upto 1 ton'  },
+  { type: 'tempo',       label: 'Tempo',       emoji: '🚚', price: '₹150+', capacity: 'Upto 2 ton'  },
+  { type: 'large_truck', label: 'Large Truck', emoji: '🚛', price: '₹250+', capacity: 'Upto 5 ton'  },
 ];
 
 const BookingScreen = ({ navigation }) => {
@@ -108,15 +108,15 @@ const BookingScreen = ({ navigation }) => {
             style={[styles.vehicleRow, selectedVehicle === v.type && styles.vehicleRowActive]}
             onPress={() => setSelectedVehicle(v.type)}
           >
-            <View style={styles.vehicleIcon}>
-              <Icon name={v.icon} size={28} color={selectedVehicle === v.type ? COLORS.primary : COLORS.textSecondary} />
+            <View style={[styles.vehicleIcon, selectedVehicle === v.type && styles.vehicleIconActive]}>
+              <Text style={styles.vehicleEmoji}>{v.emoji}</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.vehicleName}>{v.label}</Text>
               <Text style={styles.vehicleCap}>{v.capacity}</Text>
             </View>
             <Text style={styles.vehiclePrice}>{v.price}</Text>
-            {selectedVehicle === v.type && <Icon name="check-circle" size={20} color={COLORS.primary} style={{ marginLeft: 8 }} />}
+            {selectedVehicle === v.type && <Icon name="check-circle" size={20} color={COLORS.accent} style={{ marginLeft: 8 }} />}
           </TouchableOpacity>
         ))}
 
@@ -170,12 +170,14 @@ const styles = StyleSheet.create({
   currentLocBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -8, marginBottom: 8, padding: 8 },
   currentLocText:     { fontSize: SIZES.sm, color: COLORS.primary, fontWeight: '600' },
   sectionTitle:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginHorizontal: 16, marginTop: 8, marginBottom: 8 },
-  vehicleRow:         { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 8, padding: 14, borderRadius: SIZES.radius, elevation: 1, borderWidth: 1.5, borderColor: 'transparent' },
-  vehicleRowActive:   { borderColor: COLORS.primary, backgroundColor: '#EFF6FF' },
-  vehicleIcon:        { width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.bgLight, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  vehicleRow:         { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 10, padding: 14, borderRadius: SIZES.radius, elevation: 2, borderWidth: 1.5, borderColor: 'transparent' },
+  vehicleRowActive:   { borderColor: COLORS.accent, backgroundColor: '#FFF3E9' },
+  vehicleIcon:        { width: 52, height: 52, borderRadius: 26, backgroundColor: COLORS.bgLight, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  vehicleIconActive:  { backgroundColor: '#FFE4CC' },
+  vehicleEmoji:       { fontSize: 26 },
   vehicleName:        { fontSize: SIZES.base, fontWeight: '600', color: COLORS.textPrimary },
   vehicleCap:         { fontSize: SIZES.xs, color: COLORS.textSecondary },
-  vehiclePrice:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.primary },
+  vehiclePrice:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.accent },
   fareCard:           { backgroundColor: COLORS.white, margin: 16, padding: 16, borderRadius: SIZES.radiusLg, elevation: 2 },
   fareTitle:          { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 12 },
   fareRow:            { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
@@ -183,11 +185,11 @@ const styles = StyleSheet.create({
   fareVal:            { fontSize: SIZES.sm, color: COLORS.textPrimary, fontWeight: '500' },
   totalRow:           { borderTopWidth: 1, borderTopColor: COLORS.grayLight, paddingTop: 8, marginTop: 4 },
   totalLabel:         { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary },
-  totalVal:           { fontSize: SIZES.xl, fontWeight: '700', color: COLORS.primary },
+  totalVal:           { fontSize: SIZES.xl, fontWeight: '700', color: COLORS.accent },
   footer:             { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.white, padding: 16, elevation: 8 },
   footerLabel:        { fontSize: SIZES.xs, color: COLORS.textSecondary },
-  footerFare:         { fontSize: SIZES.xxl, fontWeight: '700', color: COLORS.primary },
-  bookBtn:            { backgroundColor: COLORS.primary, paddingVertical: 14, paddingHorizontal: 32, borderRadius: SIZES.radiusLg },
+  footerFare:         { fontSize: SIZES.xxl, fontWeight: '700', color: COLORS.accent },
+  bookBtn:            { backgroundColor: COLORS.accent, paddingVertical: 14, paddingHorizontal: 32, borderRadius: SIZES.radiusLg },
   bookBtnDisabled:    { opacity: 0.6 },
   bookBtnText:        { color: COLORS.white, fontSize: SIZES.base, fontWeight: '700' },
 });
