@@ -1,15 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import { COLORS, SIZES } from '../utils/theme';
 
-const LOCATIONIQ_KEY = 'YOUR_LOCATIONIQ_API_KEY';
+export const LOCATIONIQ_KEY = 'YOUR_LOCATIONIQ_API_KEY';
 
-export default function LocationAutocomplete({ placeholder, onSelect }) {
+export default function LocationAutocomplete({ placeholder, onSelect, value }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef(null);
+
+  useEffect(() => {
+    if (value !== undefined) setQuery(value);
+  }, [value]);
 
   const search = (text) => {
     setQuery(text);

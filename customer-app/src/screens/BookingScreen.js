@@ -4,7 +4,9 @@ import {
   SafeAreaView, Platform, Alert,
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import LocationAutocomplete from '../components/LocationAutocomplete';
+import * as Location from 'expo-location';
+import axios from 'axios';
+import LocationAutocomplete, { LOCATIONIQ_KEY } from '../components/LocationAutocomplete';
 import { COLORS, SIZES } from '../utils/theme';
 import useOrderStore from '../store/useOrderStore';
 
@@ -20,10 +22,34 @@ const BookingScreen = ({ navigation }) => {
     pickup, drop, selectedVehicle, fareEstimate,
     setPickup, setDrop, setSelectedVehicle, getFareEstimate, createOrder, isLoading,
   } = useOrderStore();
+  const [pickupText, setPickupText] = useState();
+  const [locatingMe, setLocatingMe] = useState(false);
 
   useEffect(() => {
     if (pickup && drop) getFareEstimate();
   }, [pickup, drop, selectedVehicle]);
+
+  const useCurrentLocation = async () => {
+    setLocatingMe(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Location permission is required to use your current location.');
+        return;
+      }
+      const { coords } = await Location.getCurrentPositionAsync({});
+      const res = await axios.get('https://us1.locationiq.com/v1/reverse', {
+        params: { key: LOCATIONIQ_KEY, lat: coords.latitude, lon: coords.longitude, format: 'json' },
+      });
+      const address = res.data?.display_name || `${coords.latitude}, ${coords.longitude}`;
+      setPickup({ address, lat: coords.latitude, lng: coords.longitude });
+      setPickupText(address);
+    } catch (err) {
+      Alert.alert('Error', 'Could not fetch your current location');
+    } finally {
+      setLocatingMe(false);
+    }
+  };
 
   const handleBook = async () => {
     if (!pickup || !drop) return Alert.alert('Error', 'Select pickup and drop locations');
@@ -59,11 +85,20 @@ const BookingScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.locationInputs}>
-            <LocationAutocomplete placeholder="Pickup location" onSelect={setPickup} />
+            <LocationAutocomplete
+              placeholder="Pickup location"
+              value={pickupText}
+              onSelect={(loc) => { setPickup(loc); setPickupText(loc.address); }}
+            />
             <View style={styles.divider} />
             <LocationAutocomplete placeholder="Drop location" onSelect={setDrop} />
           </View>
         </View>
+
+        <TouchableOpacity style={styles.currentLocBtn} onPress={useCurrentLocation} disabled={locatingMe}>
+          <Icon name="crosshairs-gps" size={18} color={COLORS.primary} />
+          <Text style={styles.currentLocText}>{locatingMe ? 'Locating...' : 'Use current location for pickup'}</Text>
+        </TouchableOpacity>
 
         {/* Vehicle Selection */}
         <Text style={styles.sectionTitle}>Choose Vehicle</Text>
@@ -132,6 +167,8 @@ const styles = StyleSheet.create({
   line:               { width: 2, flex: 1, backgroundColor: COLORS.grayLight, marginVertical: 4 },
   locationInputs:     { flex: 1 },
   divider:            { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 4 },
+  currentLocBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -8, marginBottom: 8, padding: 8 },
+  currentLocText:     { fontSize: SIZES.sm, color: COLORS.primary, fontWeight: '600' },
   sectionTitle:       { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginHorizontal: 16, marginTop: 8, marginBottom: 8 },
   vehicleRow:         { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 8, padding: 14, borderRadius: SIZES.radius, elevation: 1, borderWidth: 1.5, borderColor: 'transparent' },
   vehicleRowActive:   { borderColor: COLORS.primary, backgroundColor: '#EFF6FF' },
