@@ -13,10 +13,10 @@ const useAuthStore = create((set) => ({
     return res.data;
   },
 
-  verifyOtp: async (phone, otp, referralCode) => {
+  verifyOtp: async (phone, otp, referralCode, name) => {
     set({ isLoading: true });
     try {
-      const res = await api.post('/auth/verify-otp', { phone, otp, referralCode });
+      const res = await api.post('/auth/verify-otp', { phone, otp, referralCode, name });
       await AsyncStorage.setItem('token', res.data.token);
       set({ user: res.data.user, token: res.data.token, isLoggedIn: true, isLoading: false });
       return res.data;

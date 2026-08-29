@@ -28,13 +28,14 @@ exports.sendOtp = async (req, res) => {
 // POST /api/auth/verify-otp
 exports.verifyOtp = async (req, res) => {
   try {
-    const { phone, otp, referralCode } = req.body;
+    const { phone, otp, referralCode, name } = req.body;
     if (!verifyOTP(phone, otp)) return res.status(400).json({ message: 'Invalid or expired OTP' });
 
     let user = await User.findOne({ phone });
     let isNew = false;
     if (!user) {
       const userData = { phone, referralCode: makeReferral() };
+      if (name) userData.name = name;
 
       if (referralCode) {
         const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });

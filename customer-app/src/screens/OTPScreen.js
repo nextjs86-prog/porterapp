@@ -6,6 +6,7 @@ import useAuthStore from '../store/useAuthStore';
 const OTPScreen = ({ navigation, route }) => {
   const { phone } = route.params;
   const [otp, setOtp]         = useState(['', '', '', '', '', '']);
+  const [name, setName] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
@@ -25,7 +26,7 @@ const OTPScreen = ({ navigation, route }) => {
     if (code.length !== 6) return Alert.alert('Error', 'Enter complete 6-digit OTP');
     setLoading(true);
     try {
-      await verifyOtp(phone, code, referralCode.trim() || undefined);
+      await verifyOtp(phone, code, referralCode.trim() || undefined, name.trim() || undefined);
       navigation.replace('Main');
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Invalid OTP');
@@ -70,6 +71,14 @@ const OTPScreen = ({ navigation, route }) => {
           />
         ))}
       </View>
+
+      <TextInput
+        style={styles.referralInput}
+        placeholder="Your Name"
+        placeholderTextColor={COLORS.gray}
+        value={name}
+        onChangeText={setName}
+      />
 
       <TextInput
         style={styles.referralInput}
