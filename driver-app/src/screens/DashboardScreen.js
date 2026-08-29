@@ -38,7 +38,7 @@ const DashboardScreen = ({ navigation }) => {
           sound: true,
           priority: Notifications.AndroidNotificationPriority.MAX,
         },
-        trigger: Platform.OS === 'android' ? { seconds: 1, channelId: 'orders' } : null,
+        trigger: Platform.OS === 'android' ? { seconds: 1, channelId: 'orders-v2' } : null,
       });
     });
 
