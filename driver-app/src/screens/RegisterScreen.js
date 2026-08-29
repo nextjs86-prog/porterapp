@@ -50,12 +50,25 @@ const RegisterScreen = ({ navigation, route }) => {
       Object.entries(docs).forEach(([k, v]) => {
         if (v) fd.append(k, { uri: v.uri, type: v.mimeType || 'image/jpeg', name: v.fileName || `${k}.jpg` });
       });
-      await api.post('/driver/register', fd, {
+      const res = await api.post('/driver/register', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      Alert.alert('Success!', 'Registration submitted. Awaiting admin approval.', [
-        { text: 'OK', onPress: () => navigation.replace('Login') },
-      ]);
+
+      const uploadedDocs = res.data?.driver?.documents || {};
+      const attempted = Object.entries(docs).filter(([k]) => k !== 'photo' && docs[k]);
+      const confirmed = attempted.filter(([k]) => uploadedDocs[k]?.url);
+
+      if (attempted.length > 0 && confirmed.length < attempted.length) {
+        Alert.alert(
+          'Registration submitted, but...',
+          `Only ${confirmed.length}/${attempted.length} documents uploaded successfully. Please edit your profile later to re-upload the missing ones.`,
+          [{ text: 'OK', onPress: () => navigation.replace('Login') }]
+        );
+      } else {
+        Alert.alert('Success!', 'Registration submitted with all documents uploaded. Awaiting admin approval.', [
+          { text: 'OK', onPress: () => navigation.replace('Login') },
+        ]);
+      }
     } catch (err) {
       Alert.alert('Error', err.response?.data?.message || 'Registration failed');
     } finally { setLoading(false); }
@@ -110,7 +123,7 @@ const RegisterScreen = ({ navigation, route }) => {
           style={[styles.submitBtn, loading && { opacity: 0.6 }]}
           onPress={handleRegister} disabled={loading}
         >
-          <Text style={styles.submitBtnText}>{loading ? 'Submitting...' : 'Submit Registration'}</Text>
+          <Text style={styles.submitBtnText}>{loading ? 'Uploading documents...' : 'Submit Registration'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
