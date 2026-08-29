@@ -12,6 +12,14 @@ const ORDER_STEPS = [
   { key: 'in_transit', label: 'Delivering...',      btnLabel: 'Mark Delivered',   nextStatus: 'delivered'  },
 ];
 
+const CANCEL_REASONS = [
+  'Customer not responding',
+  'Wrong pickup address',
+  'Customer requested cancellation',
+  'Vehicle breakdown',
+  'Other',
+];
+
 const NavigationScreen = ({ navigation, route }) => {
   const { orderId } = route.params;
   const [order,   setOrder]   = useState(null);
@@ -19,7 +27,12 @@ const NavigationScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpInput, setOtpInput] = useState('');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelNote, setCancelNote] = useState('');
+  const [cancelling, setCancelling] = useState(false);
   const updateOrderStatus = useDriverStore(s => s.updateOrderStatus);
+  const cancelOrderAction = useDriverStore(s => s.cancelOrder);
   const mapRef = useRef(null);
 
   useEffect(() => { fetchOrder(); }, []);
@@ -70,6 +83,23 @@ const NavigationScreen = ({ navigation, route }) => {
     Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`);
   };
 
+  const handleConfirmCancel = async () => {
+    const reason = cancelReason === 'Other' ? cancelNote.trim() : cancelReason;
+    if (!reason) return Alert.alert('Error', 'Please select or enter a reason');
+    setCancelling(true);
+    try {
+      await cancelOrderAction(orderId, reason);
+      setShowCancelModal(false);
+      Alert.alert('Trip Cancelled', 'The customer has been notified.', [
+        { text: 'OK', onPress: () => navigation.replace('Main') },
+      ]);
+    } catch (err) {
+      Alert.alert('Error', err.response?.data?.message || 'Failed to cancel trip');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const step = ORDER_STEPS[stepIdx];
 
   return (
@@ -98,9 +128,9 @@ const NavigationScreen = ({ navigation, route }) => {
         )}
       </MapView>
 
-      {/* Back */}
-      <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-        <Icon name="arrow-left" size={22} color={COLORS.primary} />
+      {/* Cancel Trip */}
+      <TouchableOpacity style={styles.backBtn} onPress={() => { setCancelReason(''); setCancelNote(''); setShowCancelModal(true); }}>
+        <Icon name="close" size={22} color={COLORS.error} />
       </TouchableOpacity>
 
       {/* Bottom Card */}
@@ -188,6 +218,50 @@ const NavigationScreen = ({ navigation, route }) => {
           </View>
         </View>
       </Modal>
+      <Modal visible={showCancelModal} transparent animationType="fade" onRequestClose={() => setShowCancelModal(false)}>
+        <View style={styles.otpOverlay}>
+          <View style={styles.otpModal}>
+            <Text style={styles.otpTitle}>Cancel Trip</Text>
+            <Text style={styles.otpSub}>Select a reason for cancelling</Text>
+
+            <View style={styles.reasonList}>
+              {CANCEL_REASONS.map((r) => (
+                <TouchableOpacity
+                  key={r}
+                  style={[styles.reasonChip, cancelReason === r && styles.reasonChipActive]}
+                  onPress={() => setCancelReason(r)}
+                >
+                  <Text style={[styles.reasonChipText, cancelReason === r && styles.reasonChipTextActive]}>{r}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {cancelReason === 'Other' && (
+              <TextInput
+                style={styles.cancelNoteInput}
+                placeholder="Describe the reason"
+                placeholderTextColor={COLORS.gray}
+                value={cancelNote}
+                onChangeText={setCancelNote}
+                multiline
+              />
+            )}
+
+            <View style={styles.otpBtnRow}>
+              <TouchableOpacity style={styles.otpCancelBtn} onPress={() => setShowCancelModal(false)}>
+                <Text style={styles.otpCancelText}>Keep Trip</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.otpConfirmBtn, { backgroundColor: COLORS.error }, cancelling && { opacity: 0.6 }]}
+                onPress={handleConfirmCancel}
+                disabled={cancelling}
+              >
+                <Text style={styles.otpConfirmText}>{cancelling ? 'Cancelling...' : 'Confirm Cancel'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -224,6 +298,12 @@ const styles = StyleSheet.create({
   otpCancelText: { color: COLORS.textSecondary, fontWeight: '600' },
   otpConfirmBtn: { flex: 1, padding: 14, borderRadius: SIZES.radius, backgroundColor: COLORS.primary, alignItems: 'center' },
   otpConfirmText:{ color: COLORS.white, fontWeight: '700' },
+  reasonList:    { width: '100%', gap: 8 },
+  reasonChip:    { borderWidth: 1.5, borderColor: COLORS.grayLight, borderRadius: SIZES.radius, padding: 12, width: '100%' },
+  reasonChipActive: { borderColor: COLORS.error, backgroundColor: '#FEF2F2' },
+  reasonChipText: { fontSize: SIZES.sm, color: COLORS.textPrimary, textAlign: 'center' },
+  reasonChipTextActive: { color: COLORS.error, fontWeight: '700' },
+  cancelNoteInput: { borderWidth: 1.5, borderColor: COLORS.grayLight, borderRadius: SIZES.radius, padding: 12, fontSize: SIZES.sm, color: COLORS.textPrimary, width: '100%', marginTop: 12, minHeight: 60, textAlignVertical: 'top' },
 });
 
 export default NavigationScreen;

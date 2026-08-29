@@ -52,10 +52,17 @@ const TrackingScreen = ({ navigation, route }) => {
       setDriverLocation({ latitude: lat, longitude: lng });
     });
 
-    socket.on('order:update', ({ status }) => {
+    socket.on('order:update', ({ status, cancelReason }) => {
       setOrder(prev => prev ? { ...prev, status } : prev);
       if (status === 'delivered') {
         setTimeout(() => setShowRating(true), 1000);
+      }
+      if (status === 'cancelled') {
+        Alert.alert(
+          'Trip Cancelled',
+          cancelReason ? `The driver cancelled this trip: ${cancelReason}` : 'The driver cancelled this trip.',
+          [{ text: 'OK', onPress: () => navigation.replace('Main') }]
+        );
       }
     });
 

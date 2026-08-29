@@ -252,6 +252,35 @@ exports.cancelOrder = async (req, res) => {
   }
 };
 
+exports.driverCancelOrder = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    if (!reason || !reason.trim()) return res.status(400).json({ message: 'Cancellation reason is required' });
+
+    const order = await Order.findOneAndUpdate(
+      { _id: req.params.id, driver: req.user._id, status: { $nin: ['delivered', 'cancelled'] } },
+      { status: 'cancelled', cancelReason: reason },
+      { new: true }
+    ).populate('customer', 'name fcmToken');
+
+    if (!order) return res.status(400).json({ message: 'Order not available to cancel' });
+
+    if (order.customer?.fcmToken) {
+      await sendPushNotification(
+        order.customer.fcmToken, 'Trip Cancelled',
+        `Your driver cancelled the trip: ${reason}`, { orderId: order._id.toString(), type: 'order_cancelled' }
+      );
+    }
+    req.io?.to(`customer:${order.customer._id}`).emit('order:update', {
+      orderId: order._id, status: 'cancelled', cancelReason: reason,
+    });
+
+    res.json({ message: 'Order cancelled', order });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.rateOrder = async (req, res) => {
   try {
     const { stars, review } = req.body;

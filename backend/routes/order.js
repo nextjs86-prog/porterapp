@@ -3,7 +3,7 @@ const { protect, protectAny } = require('../middleware/auth');
 const {
   createOrder, getOrder, updateOrderStatus,
   getTracking, acceptOrder, rejectOrder,
-  cancelOrder, rateOrder, fareEstimate,
+  cancelOrder, driverCancelOrder, rateOrder, fareEstimate,
   getNearbyDrivers,
 } = require('../controllers/orderController');
 
@@ -19,6 +19,7 @@ router.get('/:id/tracking',       customerAuth, getTracking);
 router.post('/:id/accept',        driverAuth,   acceptOrder);
 router.post('/:id/reject',        driverAuth,   rejectOrder);
 router.delete('/:id',             customerAuth, cancelOrder);
+router.post('/:id/driver-cancel', driverAuth,   driverCancelOrder);
 router.post('/:id/rate',          customerAuth, rateOrder);
 
 module.exports = router;

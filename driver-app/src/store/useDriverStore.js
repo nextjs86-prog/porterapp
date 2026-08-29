@@ -54,6 +54,12 @@ const useDriverStore = create((set, get) => ({
     set({ currentOrder: res.data });
     return res.data;
   },
+
+  cancelOrder: async (orderId, reason) => {
+    const res = await api.post(`/order/${orderId}/driver-cancel`, { reason });
+    set({ currentOrder: null });
+    return res.data;
+  },
 }));
 
 export default useDriverStore;
