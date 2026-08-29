@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Switch,
-  SafeAreaView, ScrollView, Alert,
+  SafeAreaView, ScrollView, Alert, Platform,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Icon from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
 import io from 'socket.io-client';
 import { COLORS, SIZES } from '../utils/theme';
 import useDriverStore from '../store/useDriverStore';
@@ -30,6 +31,15 @@ const DashboardScreen = ({ navigation }) => {
     socket.on('order:new', (order) => {
       setPendingOrder(order);
       navigation.navigate('IncomingOrder', { order });
+      Notifications.scheduleNotificationAsync({
+        content: {
+          title: 'New Order Request!',
+          body: `Pickup: ${order.pickup?.address || 'Nearby'} • ₹${order.fareBreakdown?.total || ''}`,
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.MAX,
+        },
+        trigger: Platform.OS === 'android' ? { seconds: 1, channelId: 'orders' } : null,
+      });
     });
 
     // Location tracking
