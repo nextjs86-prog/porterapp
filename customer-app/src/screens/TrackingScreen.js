@@ -8,6 +8,7 @@ import { COLORS, SIZES } from '../utils/theme';
 import io from 'socket.io-client';
 import api from '../utils/api';
 import useOrderStore from '../store/useOrderStore';
+import useAuthStore from '../store/useAuthStore';
 
 const SOCKET_URL = 'https://porterapp-7y12.onrender.com';
 
@@ -42,15 +43,13 @@ const TrackingScreen = ({ navigation, route }) => {
   const [stars,          setStars]          = useState(5);
   const mapRef   = useRef(null);
   const socketRef = useRef(null);
+  const user = useAuthStore(s => s.user);
 
   useEffect(() => {
     fetchOrder();
     const socket = io(SOCKET_URL);
     socketRef.current = socket;
-
-    socket.on(`driver:location:${order?.driver?._id}`, ({ lat, lng }) => {
-      setDriverLocation({ latitude: lat, longitude: lng });
-    });
+    socket.emit('customer:join', user?._id);
 
     socket.on('order:update', ({ status, cancelReason }) => {
       setOrder(prev => prev ? { ...prev, status } : prev);
@@ -68,6 +67,19 @@ const TrackingScreen = ({ navigation, route }) => {
 
     return () => socket.disconnect();
   }, []);
+
+  // Bind the driver-location listener once we actually know the driver's id
+  // (order loads asynchronously, so this can't be set up in the effect above).
+  useEffect(() => {
+    const socket = socketRef.current;
+    const driverId = order?.driver?._id;
+    if (!socket || !driverId) return;
+
+    const eventName = `driver:location:${driverId}`;
+    const handler = ({ lat, lng }) => setDriverLocation({ latitude: lat, longitude: lng });
+    socket.on(eventName, handler);
+    return () => socket.off(eventName, handler);
+  }, [order?.driver?._id]);
 
   const fetchOrder = async () => {
     try {
