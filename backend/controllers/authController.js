@@ -1,3 +1,4 @@
+const bcrypt       = require('bcryptjs');
 const User         = require('../models/User');
 const Driver       = require('../models/Driver');
 const generateToken = require('../utils/generateToken');
@@ -78,9 +79,16 @@ exports.driverLogin = async (req, res) => {
 exports.adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (email !== process.env.ADMIN_EMAIL || password !== process.env.ADMIN_PASSWORD) {
+    if (email !== process.env.ADMIN_EMAIL) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
+
+    const passwordOk = process.env.ADMIN_PASSWORD_HASH
+      ? await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH)
+      : password === process.env.ADMIN_PASSWORD; // fallback until ADMIN_PASSWORD_HASH is configured
+
+    if (!passwordOk) return res.status(401).json({ message: 'Invalid credentials' });
+
     const token = generateToken('admin', 'admin');
     res.json({ token, role: 'admin' });
   } catch (err) {

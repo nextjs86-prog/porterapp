@@ -11,7 +11,7 @@ const razorpay = new Razorpay({
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const { orderId } = req.body;
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, customer: req.user._id });
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
     const rzpOrder = await razorpay.orders.create({
@@ -37,6 +37,13 @@ exports.createRazorpayOrder = async (req, res) => {
 exports.verifyPayment = async (req, res) => {
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = req.body;
+
+    const order = await Order.findOne({ _id: orderId, customer: req.user._id });
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+
+    const payment = await Payment.findOne({ razorpayOrderId, customer: req.user._id });
+    if (!payment) return res.status(404).json({ message: 'Payment record not found' });
+
     const body = `${razorpayOrderId}|${razorpayPaymentId}`;
     const expected = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -47,11 +54,13 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).json({ message: 'Payment verification failed' });
     }
 
-    await Payment.findOneAndUpdate(
-      { razorpayOrderId },
-      { razorpayPaymentId, razorpaySignature, status: 'paid' }
-    );
-    await Order.findByIdAndUpdate(orderId, { paymentStatus: 'paid' });
+    payment.razorpayPaymentId = razorpayPaymentId;
+    payment.razorpaySignature = razorpaySignature;
+    payment.status = 'paid';
+    await payment.save();
+
+    order.paymentStatus = 'paid';
+    await order.save();
 
     res.json({ message: 'Payment verified' });
   } catch (err) {
@@ -62,7 +71,12 @@ exports.verifyPayment = async (req, res) => {
 exports.confirmCOD = async (req, res) => {
   try {
     const { orderId } = req.body;
-    await Order.findByIdAndUpdate(orderId, { paymentStatus: 'paid', paymentMethod: 'cod' });
+    const order = await Order.findOneAndUpdate(
+      { _id: orderId, customer: req.user._id },
+      { paymentStatus: 'paid', paymentMethod: 'cod' },
+      { new: true }
+    );
+    if (!order) return res.status(404).json({ message: 'Order not found' });
     res.json({ message: 'COD confirmed' });
   } catch (err) {
     res.status(500).json({ message: err.message });
