@@ -17,9 +17,10 @@ const Badge = ({ status }) => {
 };
 
 const isImage = (url) => /\.(jpe?g|png|gif|webp)$/i.test(url || '');
+const resolveFileUrl = (raw) => (!raw ? null : raw.startsWith('http') ? raw : `${FILE_BASE}/${raw.replace(/\\/g, '/')}`);
 
 const DocCard = ({ label, doc }) => {
-  const url = doc?.url ? `${FILE_BASE}/${doc.url.replace(/\\/g, '/')}` : null;
+  const url = resolveFileUrl(doc?.url);
   return (
     <div style={s.docCard}>
       <div style={s.docHeader}>
@@ -45,7 +46,7 @@ const DocCard = ({ label, doc }) => {
 
 const DriverDetailModal = ({ driver, onClose, onApprove, onToggleBlock }) => {
   if (!driver) return null;
-  const photoUrl = driver.photo ? `${FILE_BASE}/${driver.photo.replace(/\\/g, '/')}` : null;
+  const photoUrl = resolveFileUrl(driver.photo);
   return (
     <div style={s.overlay} onClick={onClose}>
       <div style={s.modal} onClick={(e) => e.stopPropagation()}>
