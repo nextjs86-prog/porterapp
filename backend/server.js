@@ -1,9 +1,10 @@
 require('dotenv').config();
-const path = require('path');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const socketHandler = require('./utils/socketHandler');
@@ -30,9 +31,11 @@ const io = new Server(server, {
 });
 
 // Middleware
+app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(mongoSanitize());
 app.use('/api', apiLimiter);
 
 // Attach io to requests
@@ -40,12 +43,6 @@ app.use((req, _res, next) => {
   req.io = io;
   next();
 });
-
-// Serve uploaded driver documents/photos
-// NOTE: Render's free tier has an ephemeral filesystem — uploaded files are
-// wiped on every restart/redeploy. Fine for a demo, but move to Cloudinary/S3
-// before relying on this for real driver documents.
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Connect DB
 connectDB();
