@@ -119,14 +119,18 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         </View>
         <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>{isOnline ? 'GO\nOFFLINE' : 'GO\nONLINE'}</Text>
-          <Switch
-            value={isOnline}
-            onValueChange={handleToggle}
-            trackColor={{ false: COLORS.grayLight, true: COLORS.success }}
-            thumbColor={COLORS.white}
-            style={{ transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] }}
-          />
+          <View style={styles.togglePill}>
+            <Text style={[styles.togglePillText, !isOnline && styles.togglePillTextActive]}>OFFLINE</Text>
+            <Switch
+              value={isOnline}
+              onValueChange={handleToggle}
+              trackColor={{ false: COLORS.grayLight, true: COLORS.success }}
+              thumbColor={COLORS.white}
+            />
+          </View>
+          <Text style={[styles.toggleLabel, isOnline && { color: COLORS.error }]}>
+            {isOnline ? 'GO OFFLINE' : 'GO ONLINE'}
+          </Text>
         </View>
       </View>
 
@@ -178,17 +182,19 @@ const DashboardScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Quick Actions */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        {/* Pro Actions */}
+        <Text style={styles.sectionTitle}>Pro Actions</Text>
         <View style={styles.quickActions}>
           {[
-            { icon: 'cash',    label: 'Earnings', action: () => navigation.navigate('Earnings') },
-            { icon: 'history', label: 'Trips',     action: () => navigation.getParent()?.navigate('Trips') },
-            { icon: 'account', label: 'Profile',   action: () => navigation.navigate('Profile') },
-            { icon: 'headset', label: 'Support',   action: () => Alert.alert('Support', 'Need help? Call us at +91 98765 43210 or email support@saharalogistics.com') },
-          ].map(({ icon, label, action }) => (
-            <TouchableOpacity key={label} style={styles.quickBtn} onPress={action}>
-              <View style={styles.quickIcon}><Icon name={icon} size={22} color={COLORS.primary} /></View>
+            { icon: 'cash-multiple',   label: 'Earnings', bg: '#DCFCE7', color: '#16A34A', action: () => navigation.navigate('Earnings') },
+            { icon: 'map-marker-path', label: 'Trips',    bg: '#DBEAFE', color: '#2563EB', action: () => navigation.getParent()?.navigate('Trips') },
+            { icon: 'account-circle',  label: 'Profile',  bg: '#EDE9FE', color: '#7C3AED', action: () => navigation.navigate('Profile') },
+            { icon: 'headset',         label: 'Support',  bg: '#D1FAE5', color: '#059669', action: () => Alert.alert('Support', 'Need help? Call us at +91 98765 43210 or email support@saharalogistics.com') },
+          ].map(({ icon, label, bg, color, action }) => (
+            <TouchableOpacity key={label} style={styles.quickCard} onPress={action} activeOpacity={0.8}>
+              <View style={[styles.quickIcon, { backgroundColor: bg }]}>
+                <Icon name={icon} size={30} color={color} />
+              </View>
               <Text style={styles.quickLabel}>{label}</Text>
             </TouchableOpacity>
           ))}
@@ -207,8 +213,11 @@ const styles = StyleSheet.create({
   statusDot:       { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.error },
   statusDotGreen:  { backgroundColor: COLORS.success },
   statusText:      { fontSize: SIZES.sm, color: 'rgba(255,255,255,0.8)' },
-  toggleRow:       { alignItems: 'center', gap: 4 },
-  toggleLabel:     { fontSize: 9, color: 'rgba(255,255,255,0.7)', textAlign: 'center', fontWeight: '700' },
+  toggleRow:       { alignItems: 'center', gap: 6 },
+  togglePill:      { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: 4, gap: 6 },
+  togglePillText:  { fontSize: SIZES.xs, fontWeight: '700', color: 'rgba(255,255,255,0.6)', paddingHorizontal: 4 },
+  togglePillTextActive: { color: COLORS.white },
+  toggleLabel:     { fontSize: 11, color: COLORS.success, textAlign: 'center', fontWeight: '700', letterSpacing: 0.5 },
   container:       { flex: 1, backgroundColor: COLORS.bgLight },
   earningsCard:    { flexDirection: 'row', backgroundColor: COLORS.white, margin: 16, borderRadius: SIZES.radiusLg, padding: 20, elevation: 4 },
   earningItem:     { flex: 1, alignItems: 'center' },
@@ -222,10 +231,10 @@ const styles = StyleSheet.create({
   offlineText:     { fontSize: SIZES.xl, fontWeight: '700', color: COLORS.white },
   offlineSub:      { fontSize: SIZES.sm, color: 'rgba(255,255,255,0.7)', marginTop: 6 },
   sectionTitle:    { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginHorizontal: 16, marginTop: 16, marginBottom: 12 },
-  quickActions:    { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 16 },
-  quickBtn:        { alignItems: 'center', gap: 8 },
-  quickIcon:       { width: 56, height: 56, borderRadius: 28, backgroundColor: COLORS.white, justifyContent: 'center', alignItems: 'center', elevation: 2 },
-  quickLabel:      { fontSize: SIZES.xs, color: COLORS.textSecondary, fontWeight: '500' },
+  quickActions:    { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginHorizontal: 16, gap: 14 },
+  quickCard:       { width: '47%', backgroundColor: COLORS.white, borderRadius: SIZES.radiusLg, paddingVertical: 24, alignItems: 'center', gap: 12, elevation: 3 },
+  quickIcon:       { width: 76, height: 76, borderRadius: 38, justifyContent: 'center', alignItems: 'center' },
+  quickLabel:      { fontSize: SIZES.base, color: COLORS.textPrimary, fontWeight: '600' },
 });
 
 export default DashboardScreen;
