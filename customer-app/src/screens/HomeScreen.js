@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, SafeAreaView,
+  StyleSheet, SafeAreaView, Alert,
 } from 'react-native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { COLORS, SIZES } from '../utils/theme';
 import useAuthStore   from '../store/useAuthStore';
 import useOrderStore  from '../store/useOrderStore';
 
-const VEHICLES = [
-  { type: 'bike',        label: 'Bike',       icon: 'motorbike',      desc: 'Small parcels' },
-  { type: 'mini_truck',  label: 'Mini Truck',  icon: 'truck-outline',  desc: 'Small loads' },
-  { type: 'tempo',       label: 'Tempo',       icon: 'truck',          desc: 'Medium loads' },
-  { type: 'large_truck', label: 'Large Truck', icon: 'truck-fast',     desc: 'Heavy goods' },
+const CATEGORIES = [
+  { key: 'trucks',  label: 'Trucks',           emoji: '🚚', defaultVehicle: 'mini_truck' },
+  { key: 'bike',    label: '2 Wheeler',        emoji: '🏍️', defaultVehicle: 'bike'        },
+  { key: 'packers', label: 'Packers & Movers', emoji: '📦', comingSoon: true              },
 ];
 
 const RECENT = [
@@ -22,7 +21,16 @@ const RECENT = [
 
 const HomeScreen = ({ navigation }) => {
   const user            = useAuthStore(s => s.user);
-  const { selectedVehicle, setSelectedVehicle, setPickup, setDrop } = useOrderStore();
+  const { pickup, setSelectedVehicle, setPickup, setDrop } = useOrderStore();
+
+  const handleCategoryPress = (cat) => {
+    if (cat.comingSoon) {
+      Alert.alert('Coming Soon', 'Packers & Movers service will be available on SAHARA soon!');
+      return;
+    }
+    setSelectedVehicle(cat.defaultVehicle);
+    navigation.navigate('Booking');
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -38,31 +46,55 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Search bar */}
+        {/* Pick up from card */}
         <TouchableOpacity
-          style={styles.searchBar}
+          style={styles.pickupCard}
           onPress={() => navigation.navigate('Booking')}
           activeOpacity={0.8}
         >
-          <Icon name="map-search" size={20} color={COLORS.gray} />
-          <Text style={styles.searchPlaceholder}>Enter pickup location...</Text>
+          <View style={styles.pickupIconWrap}>
+            <Icon name="arrow-up" size={18} color={COLORS.white} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.pickupLabel}>Pick up from</Text>
+            <Text style={styles.pickupAddress} numberOfLines={1}>
+              {pickup?.address || 'Enter pickup location...'}
+            </Text>
+          </View>
+          <Icon name="chevron-right" size={22} color={COLORS.gray} />
         </TouchableOpacity>
 
-        {/* Vehicle Selector */}
-        <Text style={styles.sectionTitle}>Select Vehicle</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vehicleScroll}>
-          {VEHICLES.map((v) => (
+        {/* Category Grid */}
+        <View style={styles.categoryGrid}>
+          {CATEGORIES.map((cat) => (
             <TouchableOpacity
-              key={v.type}
-              style={[styles.vehicleCard, selectedVehicle === v.type && styles.vehicleCardActive]}
-              onPress={() => setSelectedVehicle(v.type)}
+              key={cat.key}
+              style={[styles.categoryCard, cat.key === 'packers' && styles.categoryCardWide]}
+              onPress={() => handleCategoryPress(cat)}
+              activeOpacity={0.85}
             >
-              <Icon name={v.icon} size={32} color={selectedVehicle === v.type ? COLORS.white : COLORS.primary} />
-              <Text style={[styles.vehicleLabel, selectedVehicle === v.type && styles.vehicleLabelActive]}>{v.label}</Text>
-              <Text style={[styles.vehicleDesc, selectedVehicle === v.type && styles.vehicleDescActive]}>{v.desc}</Text>
+              <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+              <View style={styles.categoryLabelRow}>
+                <Text style={styles.categoryLabel}>{cat.label}</Text>
+                <Icon name="chevron-right" size={18} color={COLORS.textPrimary} />
+              </View>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
+
+        {/* Rewards banner */}
+        <TouchableOpacity
+          style={styles.rewardsBanner}
+          onPress={() => navigation.navigate('Profile')}
+          activeOpacity={0.85}
+        >
+          <Text style={{ fontSize: 26 }}>🪙</Text>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={styles.rewardsTitle}>Explore SAHARA Rewards</Text>
+            <Text style={styles.rewardsSub}>Refer friends & earn wallet cashback</Text>
+          </View>
+          <Icon name="chevron-right" size={20} color={COLORS.textPrimary} />
+        </TouchableOpacity>
 
         {/* Recent Addresses */}
         <Text style={styles.sectionTitle}>Recent Addresses</Text>
@@ -103,16 +135,20 @@ const styles = StyleSheet.create({
   greeting:          { fontSize: SIZES.xl, fontWeight: '700', color: COLORS.white },
   subGreeting:       { fontSize: SIZES.sm, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
   notifBtn:          { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
-  searchBar:         { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, margin: 16, padding: 14, borderRadius: SIZES.radiusLg, elevation: 4, gap: 10 },
-  searchPlaceholder: { color: COLORS.gray, fontSize: SIZES.base },
   sectionTitle:      { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary, marginHorizontal: 16, marginTop: 8, marginBottom: 12 },
-  vehicleScroll:     { paddingLeft: 16 },
-  vehicleCard:       { width: 100, backgroundColor: COLORS.white, borderRadius: SIZES.radius, padding: 14, marginRight: 12, alignItems: 'center', elevation: 2, borderWidth: 2, borderColor: 'transparent' },
-  vehicleCardActive: { backgroundColor: COLORS.primary, borderColor: COLORS.accent },
-  vehicleLabel:      { fontSize: SIZES.sm, fontWeight: '700', color: COLORS.textPrimary, marginTop: 8 },
-  vehicleLabelActive:{ color: COLORS.white },
-  vehicleDesc:       { fontSize: SIZES.xs, color: COLORS.gray, marginTop: 2, textAlign: 'center' },
-  vehicleDescActive: { color: 'rgba(255,255,255,0.8)' },
+  pickupCard:        { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, margin: 16, padding: 16, borderRadius: SIZES.radiusLg, elevation: 4, gap: 12 },
+  pickupIconWrap:    { width: 32, height: 32, borderRadius: 16, backgroundColor: COLORS.success, justifyContent: 'center', alignItems: 'center' },
+  pickupLabel:       { fontSize: SIZES.sm, fontWeight: '700', color: COLORS.textPrimary },
+  pickupAddress:     { fontSize: SIZES.xs, color: COLORS.textSecondary, marginTop: 2 },
+  categoryGrid:      { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: 12, gap: 12 },
+  categoryCard:      { flexBasis: '46%', flexGrow: 1, backgroundColor: COLORS.white, borderRadius: SIZES.radiusLg, padding: 18, elevation: 2, minHeight: 130, justifyContent: 'space-between' },
+  categoryCardWide:  { flexBasis: '100%' },
+  categoryEmoji:     { fontSize: 40 },
+  categoryLabelRow:  { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 },
+  categoryLabel:     { fontSize: SIZES.base, fontWeight: '700', color: COLORS.textPrimary },
+  rewardsBanner:     { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF7ED', marginHorizontal: 16, marginTop: 20, padding: 16, borderRadius: SIZES.radiusLg, borderWidth: 1, borderColor: '#FED7AA' },
+  rewardsTitle:      { fontSize: SIZES.sm, fontWeight: '700', color: COLORS.textPrimary },
+  rewardsSub:        { fontSize: SIZES.xs, color: COLORS.textSecondary, marginTop: 2 },
   recentCard:        { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white, marginHorizontal: 16, marginBottom: 8, padding: 14, borderRadius: SIZES.radius, elevation: 1 },
   recentIcon:        { width: 40, height: 40, borderRadius: 20, backgroundColor: '#EFF6FF', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   recentLabel:       { fontSize: SIZES.sm, fontWeight: '600', color: COLORS.textPrimary },
