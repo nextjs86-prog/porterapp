@@ -23,7 +23,7 @@ export default function App() {
       Notifications.setNotificationChannelAsync('orders-v4', {
         name: 'New Orders',
         importance: Notifications.AndroidImportance.MAX,
-        sound: 'booking-ring.mp3',
+        sound: 'booking_ring.mp3',
         vibrationPattern: [0, 250, 250, 250],
       });
     }

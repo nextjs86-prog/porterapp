@@ -31,7 +31,7 @@ const IncomingOrderScreen = ({ navigation, route }) => {
       try {
         await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
         const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/booking-ring.mp3'),
+          require('../../assets/booking_ring.mp3'),
           { isLooping: true, volume: 1.0 }
         );
         soundRef.current = sound;
