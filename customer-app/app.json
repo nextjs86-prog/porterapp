@@ -8,7 +8,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "backgroundColor": "#1E3A8A"
+      "backgroundColor": "#4C1D95"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -19,7 +19,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#1E3A8A"
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#4C1D95"
       },
       "package": "com.quickhaul.customer",
       "permissions": [
@@ -44,7 +45,7 @@
         {
           "image": "./assets/icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#1E3A8A"
+          "backgroundColor": "#4C1D95"
         }
       ]
     ],
