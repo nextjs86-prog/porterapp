@@ -121,6 +121,11 @@ const NavigationScreen = ({ navigation, route }) => {
             <View style={styles.pickupPin}><Icon name="map-marker" size={28} color={COLORS.success} /></View>
           </Marker>
         )}
+        {order?.stops?.map((stop, i) => (
+          <Marker key={i} coordinate={{ latitude: stop.lat, longitude: stop.lng }} title={`Stop ${i + 1}`}>
+            <View style={styles.stopPin}><Icon name="map-marker" size={26} color={COLORS.accent} /></View>
+          </Marker>
+        ))}
         {order?.drop && (
           <Marker coordinate={{ latitude: order.drop.lat, longitude: order.drop.lng }} title="Drop">
             <View style={styles.dropPin}><Icon name="map-marker" size={28} color={COLORS.error} /></View>
@@ -167,6 +172,17 @@ const NavigationScreen = ({ navigation, route }) => {
             <Text style={styles.navBtnText} numberOfLines={1}>{order?.pickup?.address}</Text>
           </TouchableOpacity>
         </View>
+        {order?.stops?.map((stop, i) => (
+          <View style={styles.locRow} key={i}>
+            <TouchableOpacity
+              style={styles.navBtn}
+              onPress={() => openMaps(stop.lat, stop.lng)}
+            >
+              <Icon name="map-marker" size={16} color={COLORS.accent} />
+              <Text style={styles.navBtnText} numberOfLines={1}>Stop {i + 1}: {stop.address}</Text>
+            </TouchableOpacity>
+          </View>
+        ))}
         <View style={styles.locRow}>
           <TouchableOpacity
             style={styles.navBtn}
@@ -272,6 +288,7 @@ const styles = StyleSheet.create({
   backBtn:       { position: 'absolute', top: 48, left: 16, backgroundColor: COLORS.white, width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', elevation: 4 },
   pickupPin:     {},
   dropPin:       {},
+  stopPin:       {},
   card:          { backgroundColor: COLORS.white, padding: 20, paddingBottom: 36, elevation: 12, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
   statusBadge:   { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: COLORS.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, alignSelf: 'flex-start', marginBottom: 16 },
   statusText:    { color: COLORS.white, fontSize: SIZES.sm, fontWeight: '700' },

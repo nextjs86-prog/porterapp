@@ -41,10 +41,11 @@ const resolveScheduledAt = (key) => {
 
 const BookingScreen = ({ navigation }) => {
   const {
-    pickup, drop, selectedVehicle, fareEstimate,
-    setPickup, setDrop, setSelectedVehicle, getFareEstimate, createOrder, isLoading,
+    pickup, drop, stops, selectedVehicle, fareEstimate,
+    setPickup, setDrop, addStop, updateStop, removeStop, setSelectedVehicle, getFareEstimate, createOrder, isLoading,
   } = useOrderStore();
   const [pickupText, setPickupText] = useState();
+  const MAX_STOPS = 3;
   const [locatingMe, setLocatingMe] = useState(false);
   const [scheduleKey, setScheduleKey] = useState('now');
   const [promoCode, setPromoCode] = useState('');
@@ -57,7 +58,7 @@ const BookingScreen = ({ navigation }) => {
   useEffect(() => {
     if (pickup && drop) getFareEstimate();
     setAppliedPromo(null);
-  }, [pickup, drop, selectedVehicle]);
+  }, [pickup, drop, stops, selectedVehicle]);
 
   const finalTotal = fareEstimate ? Math.max(0, fareEstimate.total - (appliedPromo?.discount || 0)) : null;
 
@@ -104,8 +105,9 @@ const BookingScreen = ({ navigation }) => {
     try {
       const scheduledAt = resolveScheduledAt(scheduleKey);
       const notes = [goodsNotes.trim(), goodsWeight.trim() && `${goodsWeight.trim()} kg`].filter(Boolean).join(' • ');
+      const validStops = stops.filter(s => s && s.lat != null && s.lng != null);
       const order = await createOrder({
-        pickup, drop, vehicleType: selectedVehicle,
+        pickup, stops: validStops, drop, vehicleType: selectedVehicle,
         paymentMethod,
         promoDiscount: appliedPromo?.discount || 0,
         promoCode: appliedPromo ? promoCode.trim().toUpperCase() : undefined,
@@ -145,6 +147,12 @@ const BookingScreen = ({ navigation }) => {
           <View style={styles.routeLine}>
             <View style={[styles.dot, { backgroundColor: COLORS.success }]} />
             <View style={styles.line} />
+            {stops.map((_, i) => (
+              <React.Fragment key={i}>
+                <View style={[styles.dot, styles.dotStop]} />
+                <View style={styles.line} />
+              </React.Fragment>
+            ))}
             <View style={[styles.dot, { backgroundColor: COLORS.error }]} />
           </View>
 
@@ -154,15 +162,42 @@ const BookingScreen = ({ navigation }) => {
               value={pickupText}
               onSelect={(loc) => { setPickup(loc); setPickupText(loc.address); }}
             />
+            {stops.map((stop, i) => (
+              <React.Fragment key={i}>
+                <View style={styles.divider} />
+                <View style={styles.stopRow}>
+                  <View style={{ flex: 1 }}>
+                    <LocationAutocomplete
+                      placeholder={`Stop ${i + 1}`}
+                      value={stop?.address}
+                      onSelect={(loc) => updateStop(i, loc)}
+                    />
+                  </View>
+                  <TouchableOpacity onPress={() => removeStop(i)} style={styles.removeStopBtn}>
+                    <Icon name="close-circle" size={20} color={COLORS.gray} />
+                  </TouchableOpacity>
+                </View>
+              </React.Fragment>
+            ))}
             <View style={styles.divider} />
             <LocationAutocomplete placeholder="Drop location" onSelect={setDrop} />
           </View>
         </View>
 
-        <TouchableOpacity style={styles.currentLocBtn} onPress={useCurrentLocation} disabled={locatingMe}>
-          <Icon name="crosshairs-gps" size={18} color={COLORS.primary} />
-          <Text style={styles.currentLocText}>{locatingMe ? 'Locating...' : 'Use current location for pickup'}</Text>
-        </TouchableOpacity>
+        <View style={styles.actionLinksRow}>
+          <TouchableOpacity
+            style={styles.actionLinkBtn}
+            onPress={() => addStop({ address: '', lat: null, lng: null })}
+            disabled={stops.length >= MAX_STOPS}
+          >
+            <Icon name="plus-circle-outline" size={16} color={stops.length >= MAX_STOPS ? COLORS.gray : COLORS.primary} />
+            <Text style={[styles.actionLinkText, stops.length >= MAX_STOPS && { color: COLORS.gray }]}>Add Stop</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.currentLocBtn} onPress={useCurrentLocation} disabled={locatingMe}>
+            <Icon name="crosshairs-gps" size={18} color={COLORS.primary} />
+            <Text style={styles.currentLocText}>{locatingMe ? 'Locating...' : 'Use current location'}</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Goods description */}
         <Text style={styles.sectionTitle}>What are you sending?</Text>
@@ -309,7 +344,13 @@ const styles = StyleSheet.create({
   line:               { width: 2, flex: 1, backgroundColor: COLORS.grayLight, marginVertical: 4 },
   locationInputs:     { flex: 1 },
   divider:            { height: 1, backgroundColor: COLORS.grayLight, marginVertical: 4 },
-  currentLocBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: -8, marginBottom: 8, padding: 8 },
+  dotStop:            { backgroundColor: COLORS.accent },
+  stopRow:            { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  removeStopBtn:      { padding: 6 },
+  actionLinksRow:     { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 16, marginTop: -8, marginBottom: 8 },
+  actionLinkBtn:      { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 8 },
+  actionLinkText:     { fontSize: SIZES.sm, color: COLORS.primary, fontWeight: '600' },
+  currentLocBtn:      { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8 },
   currentLocText:     { fontSize: SIZES.sm, color: COLORS.primary, fontWeight: '600' },
   goodsRow:           { flexDirection: 'row', gap: 8, marginHorizontal: 16, marginBottom: 16 },
   goodsInput:         { backgroundColor: COLORS.white, padding: 14, borderRadius: SIZES.radius, fontSize: SIZES.sm, color: COLORS.textPrimary, elevation: 1 },

@@ -8,22 +8,33 @@ const useOrderStore = create((set, get) => ({
   selectedVehicle: 'mini_truck',
   pickup:         null,
   drop:           null,
+  stops:          [],
   isLoading:      false,
 
   setPickup:          (pickup) => set({ pickup }),
   setDrop:            (drop)   => set({ drop }),
+  setStops:           (stops)  => set({ stops }),
+  addStop:            (stop)   => set(s => ({ stops: [...s.stops, stop] })),
+  updateStop:         (index, stop) => set(s => ({ stops: s.stops.map((st, i) => (i === index ? stop : st)) })),
+  removeStop:         (index)  => set(s => ({ stops: s.stops.filter((_, i) => i !== index) })),
   setSelectedVehicle: (v)      => set({ selectedVehicle: v }),
 
   getFareEstimate: async () => {
-    const { pickup, drop, selectedVehicle } = get();
+    const { pickup, drop, stops, selectedVehicle } = get();
     if (!pickup || !drop) return;
     try {
       const toRad = d => d * Math.PI / 180;
       const R = 6371;
-      const dLat = toRad(drop.lat - pickup.lat);
-      const dLng = toRad(drop.lng - pickup.lng);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(pickup.lat))*Math.cos(toRad(drop.lat))*Math.sin(dLng/2)**2;
-      const distanceKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const haversine = (a, b) => {
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+        const h = Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
+      };
+      const validStops = stops.filter(s => s && s.lat != null && s.lng != null);
+      const points = [pickup, ...validStops, drop];
+      let distanceKm = 0;
+      for (let i = 0; i < points.length - 1; i++) distanceKm += haversine(points[i], points[i + 1]);
       const res = await api.post('/order/estimate', { vehicleType: selectedVehicle, distanceKm });
       set({ fareEstimate: { ...res.data, distanceKm: Math.round(distanceKm * 10) / 10 } });
     } catch (err) {

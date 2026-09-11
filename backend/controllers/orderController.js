@@ -4,7 +4,7 @@ const Rating     = require('../models/Rating');
 const PromoCode  = require('../models/PromoCode');
 const { calculateFare } = require('../utils/fareCalculator');
 const { sendPushNotification } = require('../utils/fcmService');
-const { haversineKm, estimateEtaMinutes } = require('../utils/geo');
+const { haversineKm, estimateEtaMinutes, multiLegDistanceKm } = require('../utils/geo');
 
 const NEARBY_RADIUS_METERS = 5000; // 5 km
 
@@ -61,16 +61,16 @@ exports.getNearbyDrivers = async (req, res) => {
 
 exports.createOrder = async (req, res) => {
   try {
-    const { pickup, drop, vehicleType, scheduledAt, promoDiscount, promoCode, paymentMethod, notes } = req.body;
+    const { pickup, drop, stops, vehicleType, scheduledAt, promoDiscount, promoCode, paymentMethod, notes } = req.body;
 
-    const distanceKm = haversineKm(pickup.lat, pickup.lng, drop.lat, drop.lng);
+    const distanceKm = multiLegDistanceKm(pickup, stops, drop);
     const fareBreakdown = await calculateFare(vehicleType, distanceKm, promoDiscount || 0);
 
     const isFutureBooking = scheduledAt && new Date(scheduledAt) > new Date();
 
     const order = await Order.create({
       customer: req.user._id,
-      pickup, drop, vehicleType, scheduledAt,
+      pickup, stops, drop, vehicleType, scheduledAt,
       distanceKm: Math.round(distanceKm * 10) / 10,
       durationMins: estimateEtaMinutes(distanceKm, vehicleType),
       fareBreakdown,
@@ -115,7 +115,7 @@ exports.createOrder = async (req, res) => {
       }
       req.io?.to(`driver:${driver._id}`).emit('order:new', {
         orderId: order._id,
-        pickup, drop, fareBreakdown, vehicleType,
+        pickup, stops, drop, fareBreakdown, vehicleType,
         distanceKm: order.distanceKm,
         durationMins: order.durationMins,
         notes: order.notes,

@@ -11,6 +11,7 @@ const orderSchema = new mongoose.Schema(
     customer:   { type: mongoose.Schema.Types.ObjectId, ref: 'User',   required: true },
     driver:     { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' },
     pickup:     { type: locationSchema, required: true },
+    stops:      { type: [locationSchema], default: [] },
     drop:       { type: locationSchema, required: true },
     vehicleType: { type: String, enum: ['bike', 'mini_truck', 'tempo', 'large_truck'], required: true },
     status: {

@@ -22,4 +22,14 @@ const estimateEtaMinutes = (distanceKm, vehicleType) => {
   return Math.max(1, Math.round(travelMinutes + 3)); // +3 min buffer for loading/traffic
 };
 
-module.exports = { haversineKm, estimateEtaMinutes, AVG_SPEED_KMH };
+// Sums the distance across pickup -> stop1 -> stop2 -> ... -> drop legs
+const multiLegDistanceKm = (pickup, stops, drop) => {
+  const points = [pickup, ...(stops || []), drop];
+  let total = 0;
+  for (let i = 0; i < points.length - 1; i++) {
+    total += haversineKm(points[i].lat, points[i].lng, points[i + 1].lat, points[i + 1].lng);
+  }
+  return total;
+};
+
+module.exports = { haversineKm, estimateEtaMinutes, multiLegDistanceKm, AVG_SPEED_KMH };

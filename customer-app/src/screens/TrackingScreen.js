@@ -138,6 +138,11 @@ const TrackingScreen = ({ navigation, route }) => {
             <View style={styles.pickupMarker}><Icon name="map-marker" size={24} color={COLORS.success} /></View>
           </Marker>
         )}
+        {order?.stops?.map((stop, i) => (
+          <Marker key={i} coordinate={{ latitude: stop.lat, longitude: stop.lng }} title={`Stop ${i + 1}`}>
+            <View style={styles.stopMarker}><Icon name="map-marker" size={22} color={COLORS.accent} /></View>
+          </Marker>
+        ))}
         {order?.drop && (
           <Marker coordinate={{ latitude: order.drop.lat, longitude: order.drop.lng }} title="Drop">
             <View style={styles.dropMarker}><Icon name="map-marker" size={24} color={COLORS.error} /></View>
@@ -246,6 +251,7 @@ const styles = StyleSheet.create({
   backBtn:          { position: 'absolute', top: 48, left: 16, backgroundColor: COLORS.white, width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', elevation: 4 },
   pickupMarker:     {},
   dropMarker:       {},
+  stopMarker:       {},
   driverMarker:     {},
   statusBar:        { flexDirection: 'row', backgroundColor: COLORS.white, paddingVertical: 12, paddingHorizontal: 16, justifyContent: 'space-between', elevation: 4 },
   stepItem:         { flex: 1, alignItems: 'center', position: 'relative' },

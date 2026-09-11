@@ -20,6 +20,9 @@ const createOrderRules = [
   body('drop.lat').isFloat({ min: -90, max: 90 }),
   body('drop.lng').isFloat({ min: -180, max: 180 }),
   body('vehicleType').isIn(VEHICLE_TYPES).withMessage('Invalid vehicle type'),
+  body('stops').optional().isArray({ max: 3 }).withMessage('Up to 3 extra stops allowed'),
+  body('stops.*.lat').optional().isFloat({ min: -90, max: 90 }),
+  body('stops.*.lng').optional().isFloat({ min: -180, max: 180 }),
 ];
 
 router.get('/nearby-drivers',     customerAuth, getNearbyDrivers);

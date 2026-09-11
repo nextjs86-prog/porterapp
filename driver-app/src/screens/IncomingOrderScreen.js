@@ -85,6 +85,19 @@ const IncomingOrderScreen = ({ navigation, route }) => {
             </View>
           </View>
           <View style={styles.routeConnector} />
+          {/* Extra stops */}
+          {order.stops?.map((stop, i) => (
+            <React.Fragment key={i}>
+              <View style={styles.locationRow}>
+                <View style={[styles.locationDot, { backgroundColor: COLORS.accent }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.locationLabel}>Stop {i + 1}</Text>
+                  <Text style={styles.locationAddr} numberOfLines={2}>{stop?.address}</Text>
+                </View>
+              </View>
+              <View style={styles.routeConnector} />
+            </React.Fragment>
+          ))}
           {/* Drop */}
           <View style={styles.locationRow}>
             <View style={[styles.locationDot, { backgroundColor: COLORS.error }]} />
