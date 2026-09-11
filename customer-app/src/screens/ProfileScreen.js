@@ -113,7 +113,7 @@ const ProfileScreen = ({ navigation }) => {
           <MenuItem icon="logout"              label="Logout"          onPress={handleLogout} danger />
         </View>
 
-        <Text style={styles.version}>Sahara Delivery v1.0.0</Text>
+        <Text style={styles.version}>Sahara v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
