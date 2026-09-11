@@ -13,6 +13,8 @@ import useDriverStore from '../store/useDriverStore';
 
 const SOCKET_URL = 'https://porterapp-7y12.onrender.com';
 
+const ONLINE_NOTIFICATION_ID = 'driver-online-status';
+
 const DashboardScreen = ({ navigation }) => {
   const { driver, isOnline, toggleOnline, updateLocation, fetchEarnings, earnings } = useDriverStore();
   const [location,    setLocation]    = useState(null);
@@ -20,6 +22,36 @@ const DashboardScreen = ({ navigation }) => {
   const mapRef    = useRef(null);
   const socketRef = useRef(null);
   const locTimer  = useRef(null);
+
+  const showOnlineNotification = async () => {
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('status', {
+        name: 'Online Status',
+        importance: Notifications.AndroidImportance.LOW,
+        sound: null,
+      });
+    }
+    await Notifications.scheduleNotificationAsync({
+      identifier: ONLINE_NOTIFICATION_ID,
+      content: {
+        title: "🟢 You're Online",
+        body: 'Receiving order requests. Tap to open Sahara Driver.',
+        sticky: true,
+        autoDismiss: false,
+        sound: false,
+        priority: Notifications.AndroidNotificationPriority.LOW,
+      },
+      trigger: Platform.OS === 'android' ? { channelId: 'status' } : null,
+    });
+  };
+
+  const hideOnlineNotification = () => Notifications.dismissNotificationAsync(ONLINE_NOTIFICATION_ID);
+
+  useEffect(() => {
+    // Restore the persistent "online" notification if the app was reopened
+    // while the driver was already toggled online from a previous session.
+    if (isOnline) showOnlineNotification();
+  }, []);
 
   useEffect(() => {
     fetchEarnings('daily');
@@ -67,6 +99,11 @@ const DashboardScreen = ({ navigation }) => {
 
   const handleToggle = async () => {
     const online = await toggleOnline();
+    if (online) {
+      await showOnlineNotification();
+    } else {
+      await hideOnlineNotification();
+    }
     Alert.alert(online ? 'You are Online' : 'You are Offline', online ? 'You will now receive order requests.' : 'You will not receive orders now.');
   };
 

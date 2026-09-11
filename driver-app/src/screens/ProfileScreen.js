@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, SafeAreaView } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import Icon from '@expo/vector-icons/MaterialCommunityIcons';
 import { COLORS, SIZES } from '../utils/theme';
 import useDriverStore from '../store/useDriverStore';
@@ -24,6 +25,7 @@ const ProfileScreen = ({ navigation }) => {
       { text: 'Cancel' },
       {
         text: 'Logout', style: 'destructive', onPress: async () => {
+          await Notifications.dismissNotificationAsync('driver-online-status');
           await logout();
           navigation.getParent()?.reset({ index: 0, routes: [{ name: 'Login' }] });
         },
