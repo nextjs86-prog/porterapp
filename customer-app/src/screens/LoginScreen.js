@@ -26,7 +26,7 @@ const LoginScreen = ({ navigation }) => {
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.header}>
         <Text style={styles.logo}>🚚</Text>
-        <Text style={styles.title}>Welcome to QuickHaul</Text>
+        <Text style={styles.title}>Welcome to Sahara Delivery</Text>
         <Text style={styles.sub}>Enter your mobile number to continue</Text>
       </View>
 

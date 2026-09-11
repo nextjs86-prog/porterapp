@@ -32,13 +32,13 @@ const PaymentScreen = ({ navigation, route }) => {
       const { razorpayOrderId, amount: amt, key } = (await api.post('/payment/create-order', { orderId })).data;
 
       const options = {
-        description:  'QuickHaul Logistics',
+        description:  'Sahara Delivery Logistics',
         image:        'https://your-logo.png',
         currency:     'INR',
         key,
         amount:       amt,
         order_id:     razorpayOrderId,
-        name:         'QuickHaul',
+        name:         'Sahara Delivery',
         prefill:      { contact: user?.phone, email: user?.email || '' },
         theme:        { color: COLORS.primary },
       };
