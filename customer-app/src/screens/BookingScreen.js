@@ -248,7 +248,6 @@ const BookingScreen = ({ navigation }) => {
               <Text style={styles.vehicleName}>{v.label}</Text>
               <Text style={styles.vehicleCap}>{v.capacity}</Text>
             </View>
-            <Text style={styles.vehiclePrice}>{v.price}</Text>
             {selectedVehicle === v.type && <Icon name="check-circle" size={20} color={COLORS.accent} style={{ marginLeft: 8 }} />}
           </TouchableOpacity>
         ))}
