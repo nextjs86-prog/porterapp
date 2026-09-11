@@ -1,40 +1,47 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { ResizeMode, Video } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { COLORS, FONTS, SIZES } from '../utils/theme';
+import { COLORS } from '../utils/theme';
+
+const MAX_WAIT_MS = 8000;
 
 const SplashScreen = ({ navigation }) => {
+  const navigated = useRef(false);
+
+  const goNext = async () => {
+    if (navigated.current) return;
+    navigated.current = true;
+    const token = await AsyncStorage.getItem('token');
+    const seen  = await AsyncStorage.getItem('onboarding_seen');
+    if (token)     navigation.replace('Main');
+    else if (seen) navigation.replace('Login');
+    else           navigation.replace('Onboarding');
+  };
+
   useEffect(() => {
-    const init = async () => {
-      await new Promise(r => setTimeout(r, 2000));
-      const token = await AsyncStorage.getItem('token');
-      const seen  = await AsyncStorage.getItem('onboarding_seen');
-      if (token)     navigation.replace('Main');
-      else if (seen) navigation.replace('Login');
-      else           navigation.replace('Onboarding');
-    };
-    init();
+    const fallback = setTimeout(goNext, MAX_WAIT_MS);
+    return () => clearTimeout(fallback);
   }, []);
 
   return (
     <View style={styles.container}>
-      <View style={styles.logoBox}>
-        <Text style={styles.logo}>🚚</Text>
-        <Text style={styles.appName}>QuickHaul</Text>
-        <Text style={styles.tagline}>Fast. Reliable. Doorstep.</Text>
-      </View>
-      <Text style={styles.version}>v1.0.0</Text>
+      <Video
+        source={require('../../assets/intro.mp4')}
+        style={styles.video}
+        resizeMode={ResizeMode.COVER}
+        shouldPlay
+        isMuted={false}
+        onPlaybackStatusUpdate={(status) => { if (status.didJustFinish) goNext(); }}
+        onError={goNext}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container:  { flex: 1, backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' },
-  logoBox:    { alignItems: 'center' },
-  logo:       { fontSize: 72, marginBottom: 16 },
-  appName:    { fontSize: 36, color: COLORS.white, fontWeight: '700', letterSpacing: 1 },
-  tagline:    { fontSize: SIZES.md, color: 'rgba(255,255,255,0.8)', marginTop: 8 },
-  version:    { position: 'absolute', bottom: 40, color: 'rgba(255,255,255,0.5)', fontSize: SIZES.sm },
+  container: { flex: 1, backgroundColor: COLORS.primary },
+  video:     { flex: 1, width: '100%', height: '100%' },
 });
 
 export default SplashScreen;
