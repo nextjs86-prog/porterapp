@@ -67,10 +67,10 @@ const DashboardScreen = ({ navigation }) => {
         content: {
           title: 'New Order Request!',
           body: `Pickup: ${order.pickup?.address || 'Nearby'} • ₹${order.fareBreakdown?.total || ''}`,
-          sound: Platform.OS === 'ios' ? 'notification.wav' : true,
+          sound: Platform.OS === 'ios' ? 'booking-ring.mp3' : true,
           priority: Notifications.AndroidNotificationPriority.MAX,
         },
-        trigger: Platform.OS === 'android' ? { seconds: 1, channelId: 'orders-v3' } : null,
+        trigger: Platform.OS === 'android' ? { seconds: 1, channelId: 'orders-v4' } : null,
       });
     });
 

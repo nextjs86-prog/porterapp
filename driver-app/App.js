@@ -18,12 +18,12 @@ export default function App() {
     if (Platform.OS === 'android') {
       // Android locks a channel's sound/importance at creation time — changing
       // the config here won't affect a channel id that already exists on a
-      // device from an earlier build, hence the new id (v3, now with the
-      // custom chime instead of the system default sound).
-      Notifications.setNotificationChannelAsync('orders-v3', {
+      // device from an earlier build, hence the new id (v4, now using the
+      // custom booking-ring chime instead of the previous notification.wav).
+      Notifications.setNotificationChannelAsync('orders-v4', {
         name: 'New Orders',
         importance: Notifications.AndroidImportance.MAX,
-        sound: 'notification.wav',
+        sound: 'booking-ring.mp3',
         vibrationPattern: [0, 250, 250, 250],
       });
     }

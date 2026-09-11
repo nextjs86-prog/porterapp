@@ -52,7 +52,7 @@
         {
           "icon": "./assets/icon.png",
           "color": "#1E3A8A",
-          "sounds": ["./assets/notification.wav"]
+          "sounds": ["./assets/notification.wav", "./assets/booking-ring.mp3"]
         }
       ]
     ],
