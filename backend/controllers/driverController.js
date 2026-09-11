@@ -12,6 +12,9 @@ exports.register = async (req, res) => {
     if (exists) return res.status(400).json({ message: 'Driver already registered' });
 
     const files = req.files || {};
+    if (!files.drivingLicense?.[0] || !files.rc?.[0] || !files.aadhar?.[0]) {
+      return res.status(400).json({ message: 'Driving License, RC and Aadhar Card are mandatory for registration' });
+    }
     const driver = await Driver.create({
       name, phone, email, vehicleType, vehicleNumber,
       photo: files.photo?.[0]?.path,

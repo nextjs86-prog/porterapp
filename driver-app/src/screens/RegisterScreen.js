@@ -43,6 +43,9 @@ const RegisterScreen = ({ navigation, route }) => {
     if (!form.name || !form.phone || !form.vehicleNumber) {
       return Alert.alert('Error', 'Fill all required fields');
     }
+    if (!docs.drivingLicense || !docs.rc || !docs.aadhar) {
+      return Alert.alert('Documents Required', 'Please upload Driving License, RC and Aadhar Card to continue. These are mandatory for approval.');
+    }
     setLoading(true);
     try {
       const fd = new FormData();
@@ -113,11 +116,11 @@ const RegisterScreen = ({ navigation, route }) => {
           ))}
         </View>
 
-        <Text style={styles.sectionTitle}>Documents</Text>
+        <Text style={styles.sectionTitle}>Documents *</Text>
         <DocUpload docKey="drivingLicense" label="Driving License" />
         <DocUpload docKey="rc"             label="RC (Vehicle Registration)" />
         <DocUpload docKey="aadhar"         label="Aadhar Card" />
-        <DocUpload docKey="photo"          label="Profile Photo" />
+        <DocUpload docKey="photo"          label="Profile Photo (optional)" />
 
         <TouchableOpacity
           style={[styles.submitBtn, loading && { opacity: 0.6 }]}
